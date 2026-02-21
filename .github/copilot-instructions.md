@@ -46,6 +46,9 @@ they are mandatory operating procedures. Read every relevant skill before writin
 Full source skill files: `docs/skills/SKILL_*.md`
 Full system design: `docs/Teletraan_SYSTEM_DESIGN_OVERVIEW.md`
 
+**BUILD PROMPTS** — Focused slash-command prompts for each build domain:
+All 24 prompts live in `.github/prompts/`. Start with `00_START_HERE.prompt.md`.
+
 ---
 
 ## ABSOLUTE NON-NEGOTIABLE RULES
@@ -95,8 +98,8 @@ Signed-off-by: Abdullah-Khan-Niazi
 | Database | Supabase (PostgreSQL) |
 | ORM/Queries | supabase-py (async) |
 | Validation | Pydantic v2 |
-| AI Providers | Gemini 1.5 Flash (default), OpenAI GPT-4o-mini, Whisper |
-| Payments | JazzCash, EasyPaisa, SafePay, NayaPay |
+| AI Providers | Gemini 1.5 Flash (default), OpenAI GPT-4o-mini, Whisper, Anthropic Claude, Cohere, OpenRouter |
+| Payments | JazzCash, EasyPaisa, SafePay, NayaPay, Bank Transfer, Dummy (dev) |
 | WhatsApp | Meta Cloud API |
 | Scheduler | APScheduler |
 | Logging | Loguru (structured, PII-masked) |
