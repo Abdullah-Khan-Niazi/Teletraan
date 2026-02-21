@@ -1,0 +1,1827 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ╔══════════════════════════════════════════════════════════════════════════════════╗
+  ║                   TELETRAAN — MASTER BUILD AGENT PROMPT v2.0                     ║
+  ║           WhatsApp Intelligent Order & Operations System                         ║
+  ║                    Pakistan Medicine Distribution Sector                         ║
+  ║                                                                                  ║
+  ║  Target: Production-Ready, Fully Implemented, Zero Placeholders                  ║
+  ║  Version: 2.0 — Multi-Gateway, Multi-AI, Robust Order Context                    ║
+  ╚══════════════════════════════════════════════════════════════════════════════════╝
+-->
+
+<teletraan_build_prompt version="2.0">
+
+  <!-- ══════════════════════════════════════════════════════════
+       AGENT DIRECTIVES — READ FIRST, FOLLOW ALWAYS
+  ══════════════════════════════════════════════════════════ -->
+  <agent_directives>
+
+    <directive id="D1" priority="CRITICAL">
+      ZERO PLACEHOLDERS. Every function, class, route, handler, and module must be
+      completely and correctly implemented. Never write TODO, FIXME, pass,
+      NotImplemented, placeholder, stub, or mock in any production code path.
+      If a section is complex, break it into smaller verified steps — never skip it.
+      An incomplete implementation is worse than no implementation.
+    </directive>
+
+    <directive id="D2" priority="CRITICAL">
+      PHASED EXECUTION WITH GIT COMMITS. Execute in strict phase order defined below.
+      At the END of every phase — and at every logical milestone within a phase —
+      commit to git using the GIT PROTOCOL defined in this prompt.
+      Never accumulate more than one logical unit of work without committing.
+      Each phase must end in a working, testable, committed state.
+    </directive>
+
+    <directive id="D3" priority="CRITICAL">
+      PRODUCTION CODE STANDARDS. All code must follow:
+      - PEP 8 style guide enforced via black and flake8
+      - Type hints on ALL functions, methods, and class attributes — no exceptions
+      - Google-style docstrings on all public classes and functions
+      - Structured logging via loguru — never bare print() in production paths
+      - Exception handling at every I/O boundary (DB, API, file, network, audio)
+      - Environment variables for ALL secrets and config — zero hardcoded values
+      - Input validation and sanitization on all external inputs
+      - Pydantic v2 models for all data validation — never raw dicts from external sources
+    </directive>
+
+    <directive id="D4" priority="CRITICAL">
+      SECURITY STANDARDS. Implement ALL of the following without exception:
+      - All secrets via python-dotenv from .env (never committed to git)
+      - .gitignore excludes: .env, __pycache__, *.pyc, logs/, .venv/, *.egg-info/
+      - Meta webhook HMAC-SHA256 signature verification on every single POST request
+      - Payment gateway signature/hash verification per gateway spec — reject invalid
+      - SQL injection prevention via Supabase SDK parameterized queries only
+      - Rate limiting per WhatsApp number per distributor (message + voice + AI call limits)
+      - Input length limits on all user-provided text (messages, names, addresses)
+      - Phone numbers, CNICs, and addresses masked or encrypted — never plaintext in logs
+      - HTTPS enforced via hosting platform (Railway/Render)
+      - Admin API endpoints protected by X-Admin-Key header from environment
+      - CNIC encrypted at application level (Fernet) before any DB write
+      - Prompt injection sanitization on all user content before AI inclusion
+    </directive>
+
+    <directive id="D5" priority="CRITICAL">
+      ORDER CONTEXT PERSISTENCE. Every order in progress must have its FULL context
+      stored in the session. The order context is defined in the ORDER CONTEXT SCHEMA
+      section of this prompt. It must be stored in sessions.pending_order_draft as JSONB.
+      The bot must be able to reconstruct the complete order conversation state from
+      this context alone — no state should exist only in memory. If the process restarts
+      mid-order, the customer must be able to continue seamlessly from where they left off.
+    </directive>
+
+    <directive id="D6" priority="HIGH">
+      MULTI-PROVIDER ABSTRACTION. All AI providers and all payment gateways are
+      accessed through abstract base classes and factory patterns. Switching providers
+      requires only an environment variable change — zero code changes. Every new
+      provider is a new implementation file that inherits from the abstract base class.
+    </directive>
+
+    <directive id="D7" priority="HIGH">
+      MODULAR ARCHITECTURE. Each module independently testable. No circular imports.
+      Dependency injection preferred over global state. Database access only through
+      the repository layer — never direct DB calls in handlers or business logic.
+    </directive>
+
+    <directive id="D8" priority="HIGH">
+      DOCUMENTATION. Every module must have:
+      - Module-level docstring explaining purpose, inputs, outputs, side effects
+      - Inline comments on all non-obvious logic
+      - README.md at project root and per major module directory
+      - .env.example with ALL required variables listed (descriptions, no real values)
+      - FastAPI OpenAPI docs auto-generated via route decorators
+      - docs/ directory with architecture, schema, deployment, onboarding, flow docs
+    </directive>
+
+    <directive id="D9" priority="HIGH">
+      DATABASE FIRST. Implement and verify the complete database schema before any
+      application logic that touches it. Apply migrations via numbered SQL files in order.
+      Never mutate schema ad hoc. Schema is the source of truth.
+    </directive>
+
+    <directive id="D10" priority="HIGH">
+      TESTING. Unit tests for all core business logic. Integration tests for all
+      webhook flows and DB operations. pytest with pytest-asyncio. Minimum 80%
+      coverage on core modules enforced by pytest-cov. Tests mirror app/ structure
+      under tests/. Every gateway, every AI provider, every FSM state must be tested.
+    </directive>
+
+    <directive id="D11" priority="HIGH">
+      FOLDER STRUCTURE STRICT. Follow the exact folder structure defined in this prompt.
+      Do not deviate, merge, abbreviate, or skip any directory or file.
+      This is an industry-standard Python project layout — follow it precisely.
+    </directive>
+
+    <directive id="D12" priority="HIGH">
+      GIT PROTOCOL. Follow the GIT PROTOCOL section exactly. Commit frequently —
+      every logical unit of work. Commit messages must follow Linus Torvalds style.
+      Every commit message must end with: Signed-off-by: Abdullah-Khan-Niazi
+      Never batch multiple unrelated changes in one commit.
+    </directive>
+
+  </agent_directives>
+
+  <!-- ══════════════════════════════════════════════════════════
+       GIT PROTOCOL — MANDATORY
+  ══════════════════════════════════════════════════════════ -->
+  <git_protocol>
+
+    <setup>
+      <step>git init at project root on Phase 1 first action</step>
+      <step>Create .gitignore immediately — before any other file — and commit it alone</step>
+      <step>git config user.name "TELETRAAN-Agent"</step>
+      <step>git config user.email "agent@teletraan.pk"</step>
+      <step>Initial commit: .gitignore + .env.example + README skeleton only</step>
+    </setup>
+
+    <commit_frequency>
+      <rule>Commit after every completed file or tightly related group of files (max 3-4 files)</rule>
+      <rule>Commit after every migration file or group of related migrations</rule>
+      <rule>Commit at the end of every phase — a "phase complete" commit</rule>
+      <rule>Commit after every test file written</rule>
+      <rule>Commit after fixing any bug discovered during testing</rule>
+      <rule>Never let more than one logical feature accumulate without committing</rule>
+      <rule>If a file is modified, commit the modification separately from additions</rule>
+    </commit_frequency>
+
+    <message_format>
+      <description>
+        Linus Torvalds style: imperative mood, specific, technical, no fluff.
+        First line: max 72 chars — summarizes WHAT changed.
+        Blank line.
+        Body: WHY this change, WHAT problem it solves, any non-obvious implications.
+        Body lines max 72 chars each.
+        Final line: Signed-off-by: Abdullah-Khan-Niazi
+      </description>
+
+      <examples>
+        <example>
+          <summary>payments: add abstract PaymentGateway base class with full interface</summary>
+          <body>
+Define the contract all payment gateway implementations must satisfy.
+The base class enforces: generate_payment_link(), verify_webhook_signature(),
+process_callback(), and get_payment_status() as abstract methods.
+
+This ensures any future gateway (SafePay, NayaPay, bank, etc.) can be
+plugged in without touching any business logic — only the factory needs
+updating. All gateways now speak a common interface.
+
+Signed-off-by: Abdullah-Khan-Niazi
+          </body>
+        </example>
+
+        <example>
+          <summary>sessions: implement full order context persistence in pending_order_draft</summary>
+          <body>
+Order context is now fully serialized to JSONB on every state transition.
+Includes: items list with catalog snapshots, quantities, unit prices,
+discount requests, out-of-stock flags, unlisted item flags, voice
+transcription source markers, conversation step tracking, and
+ambiguity resolution state.
+
+Process restart no longer loses in-progress orders. Customer continues
+from exact state without re-entering any information already provided.
+
+Signed-off-by: Abdullah-Khan-Niazi
+          </body>
+        </example>
+
+        <example>
+          <summary>ai: implement multi-provider factory with runtime provider switching</summary>
+          <body>
+The AI factory now reads ACTIVE_AI_PROVIDER from environment and returns
+the correct provider instance without any code changes needed.
+
+Supported providers: gemini (text+audio), openai (gpt+whisper),
+anthropic (claude), cohere. Each implements the AIProvider abstract
+base class with identical interface signatures.
+
+Provider-specific error codes are normalized to TeletraanAIError
+so all callers handle failures identically regardless of provider.
+
+Signed-off-by: Abdullah-Khan-Niazi
+          </body>
+        </example>
+      </examples>
+    </message_format>
+
+  </git_protocol>
+
+  <!-- ══════════════════════════════════════════════════════════
+       ORDER CONTEXT SCHEMA — MANDATORY FULL SPECIFICATION
+  ══════════════════════════════════════════════════════════ -->
+  <order_context_schema>
+    <description>
+      This is the COMPLETE specification of what must be stored in
+      sessions.pending_order_draft (JSONB) for every order in progress.
+      Every field is REQUIRED unless marked optional.
+      The context must be sufficient to fully reconstruct the order
+      conversation state after a complete process restart.
+      Update this context on every state transition — never leave it stale.
+    </description>
+
+    <context_structure>
+      <field name="order_context_version" type="string" value="1.0" note="Schema version for forward compatibility"/>
+      <field name="session_order_id" type="string (UUID)" note="Temporary ID for this draft before DB write — generate on first item add"/>
+      <field name="flow_step" type="string" note="Current step in order flow: item_collection | item_confirmation | bill_preview | discount_request | final_confirmation | complete"/>
+      <field name="initiated_at" type="ISO8601 timestamp" note="When customer started this order"/>
+      <field name="last_modified_at" type="ISO8601 timestamp" note="Update on every change"/>
+      <field name="total_messages_in_order" type="integer" note="Count of messages exchanged for this order — for analytics"/>
+
+      <field name="items" type="array" note="All items added to the order so far">
+        <item_schema>
+          <field name="line_id" type="string (UUID)" note="Unique per line item — for edit/remove targeting"/>
+          <field name="catalog_id" type="string (UUID) or null" note="null if unlisted item"/>
+          <field name="medicine_name_raw" type="string" note="Exactly what the customer typed/said — preserved for audit"/>
+          <field name="medicine_name_matched" type="string" note="Name after fuzzy matching to catalog"/>
+          <field name="medicine_name_display" type="string" note="Name shown to customer in bill"/>
+          <field name="generic_name" type="string or null"/>
+          <field name="brand_name" type="string or null"/>
+          <field name="strength" type="string or null" note="e.g., 500mg"/>
+          <field name="form" type="string or null" note="e.g., tablet, syrup"/>
+          <field name="unit" type="string" note="e.g., strip, box, carton"/>
+          <field name="quantity_requested" type="integer"/>
+          <field name="price_per_unit_paisas" type="integer" note="Price snapshot at time of addition"/>
+          <field name="line_subtotal_paisas" type="integer" note="quantity × price — before discounts"/>
+          <field name="discount_applied_paisas" type="integer" default="0"/>
+          <field name="bonus_units" type="integer" default="0"/>
+          <field name="line_total_paisas" type="integer" note="After discount"/>
+          <field name="is_out_of_stock" type="boolean"/>
+          <field name="stock_available_at_add" type="integer or null" note="Stock qty at time of addition"/>
+          <field name="is_unlisted" type="boolean" note="True if not in catalog"/>
+          <field name="is_confirmed_by_customer" type="boolean" note="Customer explicitly confirmed this item match"/>
+          <field name="input_method" type="string" note="ENUM: text | voice | button_selection"/>
+          <field name="voice_transcription" type="string or null" note="Original voice transcription if input_method=voice"/>
+          <field name="fuzzy_match_score" type="float or null" note="RapidFuzz score — null if exact match or unlisted"/>
+          <field name="fuzzy_alternatives_shown" type="array of strings or null" note="Other options shown to customer during match"/>
+          <field name="added_at" type="ISO8601 timestamp"/>
+          <field name="discount_request" type="object or null">
+            <field name="request_type" type="string" note="ENUM: bonus_units | percentage | flat_amount"/>
+            <field name="requested_value" type="string" note="e.g., '2+1', '10%', 'PKR 50'"/>
+            <field name="status" type="string" note="ENUM: pending | approved | rejected | auto_applied"/>
+          </field>
+        </item_schema>
+      </field>
+
+      <field name="order_level_discount_request" type="object or null">
+        <field name="request_text" type="string" note="Exactly what customer said for order-level discount"/>
+        <field name="status" type="string" note="ENUM: pending | approved | rejected"/>
+      </field>
+
+      <field name="pricing_snapshot" type="object">
+        <field name="subtotal_paisas" type="integer"/>
+        <field name="item_discounts_paisas" type="integer"/>
+        <field name="order_discount_paisas" type="integer" default="0"/>
+        <field name="auto_applied_discounts" type="array" note="List of auto-applied rule IDs and amounts"/>
+        <field name="delivery_charges_paisas" type="integer" default="0"/>
+        <field name="total_paisas" type="integer"/>
+        <field name="calculated_at" type="ISO8601 timestamp"/>
+      </field>
+
+      <field name="delivery" type="object">
+        <field name="address" type="string or null" note="Delivery address — copied from customer profile, can be overridden"/>
+        <field name="zone_id" type="string (UUID) or null"/>
+        <field name="zone_name" type="string or null"/>
+        <field name="estimated_delivery_hours" type="integer or null"/>
+        <field name="delivery_day_display" type="string or null" note="e.g., 'Kal ya parson' in customer's language"/>
+        <field name="address_confirmed" type="boolean" default="false"/>
+      </field>
+
+      <field name="ambiguity_resolution" type="object">
+        <field name="pending_clarifications" type="array">
+          <item_schema>
+            <field name="line_id" type="string" note="Which line item needs clarification"/>
+            <field name="ambiguity_type" type="string" note="ENUM: multiple_matches | quantity_unclear | unit_unclear | strength_unclear"/>
+            <field name="options_presented" type="array of strings"/>
+            <field name="resolved" type="boolean" default="false"/>
+          </item_schema>
+        </field>
+        <field name="all_resolved" type="boolean"/>
+      </field>
+
+      <field name="voice_order_context" type="object or null" note="Populated when order initiated via voice">
+        <field name="original_transcription" type="string" note="Full raw transcription of voice order"/>
+        <field name="items_extracted_count" type="integer"/>
+        <field name="transcription_confirmed_by_customer" type="boolean"/>
+        <field name="audio_duration_seconds" type="float"/>
+        <field name="ai_confidence" type="string" note="ENUM: high | medium | low"/>
+      </field>
+
+      <field name="quick_reorder_source" type="object or null" note="Populated if this is a reorder">
+        <field name="source_order_id" type="string (UUID)"/>
+        <field name="source_order_number" type="string"/>
+        <field name="items_changed" type="boolean" note="Did customer modify items from source order"/>
+      </field>
+
+      <field name="customer_notes" type="string or null" note="Free-text notes customer added to order"/>
+      <field name="bill_shown_at" type="ISO8601 timestamp or null" note="When bill preview was shown"/>
+      <field name="bill_shown_count" type="integer" default="0" note="How many times bill was shown — detect loops"/>
+      <field name="confirmation_requested_at" type="ISO8601 timestamp or null"/>
+      <field name="order_cancelled" type="boolean" default="false"/>
+      <field name="cancellation_reason" type="string or null"/>
+      <field name="ai_context_summary" type="string or null" note="AI-generated 2-sentence summary of order so far — injected into AI context to save tokens on long orders"/>
+    </context_structure>
+
+    <update_rules>
+      <rule>Update last_modified_at on every field change</rule>
+      <rule>Update pricing_snapshot whenever any item is added, removed, or modified</rule>
+      <rule>Never delete items from the items array — set a cancelled flag instead (for audit)</rule>
+      <rule>Append to voice_order_context only — never overwrite</rule>
+      <rule>Persist context to DB (session update) on every state transition — not just at end</rule>
+      <rule>When order is confirmed and written to orders table, clear pending_order_draft to {}</rule>
+      <rule>Generate ai_context_summary when items count exceeds 8 — reduces token usage</rule>
+    </update_rules>
+
+  </order_context_schema>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PROJECT IDENTITY
+  ══════════════════════════════════════════════════════════ -->
+  <project_identity>
+    <system_name>TELETRAAN</system_name>
+    <tagline>Aapka Distributor, Hamara Kaam</tagline>
+    <type>WhatsApp Intelligent Order and Operations Automation System</type>
+    <sector>Medicine Distribution — Pakistan</sector>
+    <deployment_target>Render (primary) / Railway (secondary)</deployment_target>
+    <language>Python 3.11+</language>
+    <version>2.0.0</version>
+  </project_identity>
+
+  <!-- ══════════════════════════════════════════════════════════
+       TECHNOLOGY STACK — COMPLETE AGENT CONTEXT
+  ══════════════════════════════════════════════════════════ -->
+  <technology_stack>
+
+    <core>
+      <item name="Python" version="3.11+" role="Primary language"/>
+      <item name="FastAPI" version="0.111+" role="Async web framework and webhook server"/>
+      <item name="Uvicorn" version="0.29+" role="ASGI server with gunicorn in production"/>
+      <item name="Pydantic" version="2.x" role="Data validation, settings management, all model definitions"/>
+    </core>
+
+    <ai_providers>
+      <description>
+        ALL AI providers accessed through the abstract AIProvider base class.
+        The factory reads ACTIVE_AI_PROVIDER from environment.
+        Switching providers = change one env var. Zero code changes required.
+        Text and voice (STT) are separately configurable via ACTIVE_AI_PROVIDER and ACTIVE_STT_PROVIDER.
+      </description>
+      <provider id="gemini" name="Google Gemini" status="implemented">
+        <sdk>google-generativeai 0.7+</sdk>
+        <text_model>gemini-1.5-flash</text_model>
+        <audio_model>gemini-1.5-flash (native audio input)</audio_model>
+        <strengths>Best Urdu/Roman Urdu, cheap, audio native</strengths>
+      </provider>
+      <provider id="openai" name="OpenAI" status="implemented">
+        <sdk>openai 1.x (official Python SDK)</sdk>
+        <text_model>gpt-4o-mini (default), gpt-4o (premium)</text_model>
+        <audio_model>whisper-1 (via openai.audio.transcriptions)</audio_model>
+        <strengths>Reliable, well-documented, strong English</strengths>
+      </provider>
+      <provider id="anthropic" name="Anthropic Claude" status="implemented">
+        <sdk>anthropic 0.25+</sdk>
+        <text_model>claude-3-haiku-20240307 (default), claude-3-5-sonnet-20241022 (premium)</text_model>
+        <audio_model>Not natively supported — route STT to whisper if anthropic selected as text provider</audio_model>
+        <strengths>Best reasoning, strong context handling</strengths>
+      </provider>
+      <provider id="cohere" name="Cohere" status="implemented">
+        <sdk>cohere 5.x</sdk>
+        <text_model>command-r (default), command-r-plus (premium)</text_model>
+        <audio_model>Not supported — route STT to whisper</audio_model>
+        <strengths>Multilingual, cost effective</strengths>
+      </provider>
+      <provider id="openrouter" name="OpenRouter" status="implemented">
+        <sdk>httpx (OpenAI-compatible REST API)</sdk>
+        <text_model>Configured via OPENROUTER_MODEL env var — any OpenRouter model</text_model>
+        <audio_model>Not supported — route STT externally</audio_model>
+        <strengths>Access to 100+ models via one API key</strengths>
+      </provider>
+      <env_vars>
+        <var>ACTIVE_AI_PROVIDER — ENUM: gemini, openai, anthropic, cohere, openrouter</var>
+        <var>ACTIVE_STT_PROVIDER — ENUM: gemini, whisper (openai). Defaults to ACTIVE_AI_PROVIDER if compatible</var>
+        <var>AI_TEXT_MODEL — Override default model for chosen provider</var>
+        <var>AI_PREMIUM_MODEL — Premium model for complex tasks (intent ambiguity, conflict resolution)</var>
+      </env_vars>
+    </ai_providers>
+
+    <payment_gateways>
+      <description>
+        ALL gateways implement abstract PaymentGateway base class.
+        Factory reads ACTIVE_PAYMENT_GATEWAY from environment.
+        Multiple gateways can be active simultaneously — ACTIVE_PAYMENT_GATEWAY is the default.
+        Customer or distributor can select alternate gateway per transaction if enabled.
+        Every gateway must implement: generate_link(), verify_signature(), process_callback(),
+        get_status(), cancel_payment(), and get_gateway_metadata().
+      </description>
+      <gateway id="jazzcash" name="JazzCash" status="implemented">
+        <type>Mobile money — Pakistan</type>
+        <api>JazzCash Merchant Payment API</api>
+        <auth>HMAC-SHA256 integrity hash</auth>
+        <callback_path>/api/payments/jazzcash/callback</callback_path>
+        <env_prefix>JAZZCASH_</env_prefix>
+        <env_vars>JAZZCASH_MERCHANT_ID, JAZZCASH_PASSWORD, JAZZCASH_INTEGRITY_SALT, JAZZCASH_API_URL</env_vars>
+      </gateway>
+      <gateway id="easypaisa" name="EasyPaisa" status="implemented">
+        <type>Mobile money — Pakistan</type>
+        <api>EasyPaisa Business API</api>
+        <auth>HMAC hash per EasyPaisa spec</auth>
+        <callback_path>/api/payments/easypaisa/callback</callback_path>
+        <env_prefix>EASYPAISA_</env_prefix>
+        <env_vars>EASYPAISA_STORE_ID, EASYPAISA_HASH_KEY, EASYPAISA_API_URL</env_vars>
+      </gateway>
+      <gateway id="safepay" name="SafePay" status="implemented">
+        <type>Card + digital payments — Pakistan (Stripe-like)</type>
+        <api>SafePay Checkout API v1</api>
+        <auth>Bearer token + HMAC webhook signature</auth>
+        <callback_path>/api/payments/safepay/callback</callback_path>
+        <env_prefix>SAFEPAY_</env_prefix>
+        <env_vars>SAFEPAY_API_KEY, SAFEPAY_SECRET_KEY, SAFEPAY_API_URL, SAFEPAY_WEBHOOK_SECRET</env_vars>
+        <notes>
+          SafePay supports Visa, Mastercard, UnionPay, and mobile wallets.
+          Generates hosted checkout page URL. Webhook delivers payment confirmation.
+          Best for distributors wanting to pay by debit/credit card.
+        </notes>
+      </gateway>
+      <gateway id="nayapay" name="NayaPay" status="implemented">
+        <type>Digital wallet — Pakistan</type>
+        <api>NayaPay Merchant API</api>
+        <auth>API key + request signing</auth>
+        <callback_path>/api/payments/nayapay/callback</callback_path>
+        <env_prefix>NAYAPAY_</env_prefix>
+        <env_vars>NAYAPAY_MERCHANT_ID, NAYAPAY_API_KEY, NAYAPAY_SECRET, NAYAPAY_API_URL</env_vars>
+        <notes>
+          NayaPay is growing rapidly in Pakistan. Supports QR code payments.
+          Implement payment initiation + QR code URL return + webhook confirmation.
+        </notes>
+      </gateway>
+      <gateway id="bank_transfer" name="Bank Transfer" status="implemented">
+        <type>Manual bank transfer with automated confirmation</type>
+        <api>None — manual process with bot assistance</api>
+        <auth>Screenshot verification via owner manual approval</auth>
+        <flow>
+          Bot sends bank account details (configurable per owner via env).
+          Customer/distributor transfers and sends screenshot.
+          Bot downloads image, stores in Supabase Storage.
+          Notifies owner with screenshot and payer details.
+          Owner sends confirmation command → bot auto-extends subscription.
+          Full audit trail maintained.
+        </flow>
+        <env_vars>BANK_ACCOUNT_NAME, BANK_ACCOUNT_NUMBER, BANK_IBAN, BANK_NAME, BANK_BRANCH</env_vars>
+      </gateway>
+      <gateway id="dummy" name="Dummy Gateway" status="implemented">
+        <type>Development and testing only</type>
+        <api>Internal — simulates full lifecycle</api>
+        <callback_path>/api/payments/dummy/callback</callback_path>
+        <env_vars>DUMMY_GATEWAY_AUTO_CONFIRM, DUMMY_GATEWAY_CONFIRM_DELAY_SECONDS</env_vars>
+        <notes>
+          Full lifecycle simulation: link generation, auto-confirm after delay,
+          failure simulation (amount ending in 99 paisas = auto-fail),
+          expiry simulation (links expire after 15 minutes in dummy mode).
+          ONLY activatable when APP_ENV != production. Guards enforced in factory.
+        </notes>
+      </gateway>
+      <env_vars>
+        <var>ACTIVE_PAYMENT_GATEWAY — ENUM: jazzcash, easypaisa, safepay, nayapay, bank_transfer, dummy</var>
+        <var>PAYMENT_CALLBACK_BASE_URL — Public HTTPS URL for gateway callbacks</var>
+        <var>PAYMENT_LINK_EXPIRY_MINUTES — Default 60, how long payment links remain valid</var>
+      </env_vars>
+    </payment_gateways>
+
+    <database>
+      <item name="Supabase" role="PostgreSQL DB, RLS, Storage, Realtime"/>
+      <item name="supabase-py" version="2.x" role="Primary Python SDK"/>
+      <item name="asyncpg" version="latest" role="Async PostgreSQL driver for complex queries"/>
+    </database>
+
+    <whatsapp>
+      <item name="Meta Cloud API" version="v19.0" role="WhatsApp Business API — all message types"/>
+      <item name="httpx" version="0.27+" role="Async HTTP client for all outbound calls"/>
+    </whatsapp>
+
+    <audio_processing>
+      <item name="pydub" role="Audio format conversion (.ogg to .wav/.mp3)"/>
+      <item name="ffmpeg" role="Audio codec backend — must be installed on server"/>
+    </audio_processing>
+
+    <document_generation>
+      <item name="openpyxl" version="3.x" role="Excel (.xlsx) order log generation"/>
+      <item name="reportlab" version="latest" role="PDF catalog and order receipt generation"/>
+      <item name="Pillow" version="latest" role="Image processing for catalog image generation"/>
+    </document_generation>
+
+    <utilities>
+      <item name="rapidfuzz" version="3.x" role="Fuzzy medicine name matching"/>
+      <item name="APScheduler" version="3.x" role="Background job scheduling"/>
+      <item name="loguru" role="Structured logging with rotation"/>
+      <item name="python-dotenv" role="Environment variable management"/>
+      <item name="pytest" version="8.x" role="Test framework"/>
+      <item name="pytest-asyncio" role="Async test support"/>
+      <item name="pytest-cov" role="Coverage reporting"/>
+      <item name="tenacity" role="Retry logic for all external API calls"/>
+      <item name="cachetools" role="In-memory TTL cache for catalog and distributor lookups"/>
+      <item name="pytz" role="Pakistan Standard Time handling"/>
+      <item name="cryptography" role="Fernet symmetric encryption for sensitive fields"/>
+      <item name="phonenumbers" role="Pakistan phone number validation and E.164 normalization"/>
+      <item name="pre-commit" role="Git hooks: black, isort, flake8"/>
+      <item name="black" role="Code formatter"/>
+      <item name="isort" role="Import sorter"/>
+      <item name="flake8" role="Linter"/>
+    </utilities>
+
+    <hosting>
+      <item name="Render" role="Primary — always-on Python web service"/>
+      <item name="Railway" role="Secondary/backup hosting"/>
+      <item name="Supabase Storage" role="Files: Excel, PDFs, voice recordings, screenshots"/>
+    </hosting>
+
+    <dev_tools>
+      <item name="GitHub" role="Version control with frequent commits"/>
+      <item name="GitHub Copilot Pro" role="Development assistance"/>
+    </dev_tools>
+
+  </technology_stack>
+
+  <!-- ══════════════════════════════════════════════════════════
+       FOLDER STRUCTURE
+  ══════════════════════════════════════════════════════════ -->
+  <folder_structure>
+    <tree>
+teletraan/
+│
+├── app/
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── webhook.py                    # Meta webhook verify + receive
+│   │   ├── health.py                     # /health — dependency status check
+│   │   ├── admin.py                      # Admin API — X-Admin-Key protected
+│   │   └── payments.py                   # All gateway callback endpoints
+│   │
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py                     # Pydantic Settings — all env vars typed + validated
+│   │   ├── security.py                   # HMAC verification, Fernet encrypt/decrypt, token utils
+│   │   ├── logging.py                    # Loguru config — JSON prod, colored dev, PII masking
+│   │   ├── exceptions.py                 # Full custom exception hierarchy
+│   │   └── constants.py                  # Enums, limits, state names, timeouts
+│   │
+│   ├── db/
+│   │   ├── __init__.py
+│   │   ├── client.py                     # Supabase client singleton + health check
+│   │   ├── repositories/
+│   │   │   ├── __init__.py
+│   │   │   ├── distributor_repo.py
+│   │   │   ├── customer_repo.py
+│   │   │   ├── order_repo.py
+│   │   │   ├── order_item_repo.py
+│   │   │   ├── catalog_repo.py
+│   │   │   ├── session_repo.py
+│   │   │   ├── payment_repo.py
+│   │   │   ├── complaint_repo.py
+│   │   │   ├── support_ticket_repo.py
+│   │   │   ├── prospect_repo.py
+│   │   │   ├── analytics_repo.py
+│   │   │   ├── audit_repo.py
+│   │   │   ├── notification_repo.py
+│   │   │   ├── scheduled_message_repo.py
+│   │   │   └── rate_limit_repo.py
+│   │   └── models/
+│   │       ├── __init__.py
+│   │       ├── distributor.py
+│   │       ├── customer.py
+│   │       ├── order.py
+│   │       ├── catalog.py
+│   │       ├── session.py
+│   │       ├── payment.py
+│   │       ├── complaint.py
+│   │       ├── support_ticket.py
+│   │       ├── prospect.py
+│   │       ├── audit.py
+│   │       └── order_context.py          # Pydantic model for pending_order_draft JSONB
+│   │
+│   ├── whatsapp/
+│   │   ├── __init__.py
+│   │   ├── client.py                     # Meta Cloud API async client
+│   │   ├── message_types.py              # All outbound message payload builders
+│   │   ├── parser.py                     # Incoming webhook parser — all message types
+│   │   └── media.py                      # Media download (voice, images) + Supabase upload
+│   │
+│   ├── ai/
+│   │   ├── __init__.py
+│   │   ├── base.py                       # Abstract AIProvider base class
+│   │   ├── factory.py                    # Provider factory — reads ACTIVE_AI_PROVIDER env
+│   │   ├── providers/
+│   │   │   ├── __init__.py
+│   │   │   ├── gemini_provider.py        # Gemini text + audio implementation
+│   │   │   ├── openai_provider.py        # OpenAI GPT + Whisper implementation
+│   │   │   ├── anthropic_provider.py     # Anthropic Claude implementation
+│   │   │   ├── cohere_provider.py        # Cohere implementation
+│   │   │   └── openrouter_provider.py    # OpenRouter proxy implementation
+│   │   ├── nlu.py                        # Intent classification + entity extraction
+│   │   ├── voice.py                      # Voice pipeline — ogg download → STT → transcription
+│   │   ├── response_generator.py         # Multi-language response generation
+│   │   └── prompts/
+│   │       ├── __init__.py
+│   │       ├── order_bot_prompts.py
+│   │       ├── sales_bot_prompts.py
+│   │       └── system_prompts.py
+│   │
+│   ├── channels/
+│   │   ├── __init__.py
+│   │   ├── router.py                     # Message routing by phone_number_id
+│   │   ├── channel_a/
+│   │   │   ├── __init__.py
+│   │   │   ├── handler.py
+│   │   │   ├── onboarding.py
+│   │   │   ├── order_flow.py
+│   │   │   ├── catalog_flow.py
+│   │   │   ├── complaint_flow.py
+│   │   │   ├── profile_flow.py
+│   │   │   ├── inquiry_flow.py
+│   │   │   └── state_machine.py
+│   │   └── channel_b/
+│   │       ├── __init__.py
+│   │       ├── handler.py
+│   │       ├── sales_flow.py
+│   │       ├── onboarding_flow.py
+│   │       ├── service_registry.py
+│   │       └── state_machine.py
+│   │
+│   ├── distributor_mgmt/
+│   │   ├── __init__.py
+│   │   ├── subscription_manager.py
+│   │   ├── reminder_service.py
+│   │   ├── notification_service.py
+│   │   ├── onboarding_service.py
+│   │   └── support_service.py
+│   │
+│   ├── payments/
+│   │   ├── __init__.py
+│   │   ├── base.py                       # Abstract PaymentGateway base class
+│   │   ├── factory.py                    # Gateway factory — reads ACTIVE_PAYMENT_GATEWAY
+│   │   ├── gateways/
+│   │   │   ├── __init__.py
+│   │   │   ├── jazzcash.py
+│   │   │   ├── easypaisa.py
+│   │   │   ├── safepay.py
+│   │   │   ├── nayapay.py
+│   │   │   ├── bank_transfer.py
+│   │   │   └── dummy_gateway.py
+│   │   └── webhook_handlers.py           # Unified post-payment lifecycle
+│   │
+│   ├── inventory/
+│   │   ├── __init__.py
+│   │   ├── catalog_service.py
+│   │   ├── stock_service.py
+│   │   ├── sync_service.py
+│   │   └── fuzzy_matcher.py
+│   │
+│   ├── orders/
+│   │   ├── __init__.py
+│   │   ├── order_service.py
+│   │   ├── billing_service.py
+│   │   ├── context_manager.py            # Order context CRUD — read/write/validate order context
+│   │   └── logging_service.py
+│   │
+│   ├── reporting/
+│   │   ├── __init__.py
+│   │   ├── excel_generator.py
+│   │   ├── pdf_generator.py
+│   │   ├── analytics_service.py
+│   │   └── report_scheduler.py
+│   │
+│   ├── scheduler/
+│   │   ├── __init__.py
+│   │   ├── scheduler.py
+│   │   └── jobs/
+│   │       ├── __init__.py
+│   │       ├── reminder_jobs.py
+│   │       ├── sync_jobs.py
+│   │       ├── report_jobs.py
+│   │       ├── cleanup_jobs.py
+│   │       └── health_jobs.py
+│   │
+│   ├── notifications/
+│   │   ├── __init__.py
+│   │   ├── whatsapp_notifier.py
+│   │   └── templates/
+│   │       ├── __init__.py
+│   │       ├── urdu_templates.py
+│   │       ├── english_templates.py
+│   │       └── roman_urdu_templates.py
+│   │
+│   ├── analytics/
+│   │   ├── __init__.py
+│   │   ├── order_analytics.py
+│   │   ├── customer_analytics.py
+│   │   ├── distributor_analytics.py
+│   │   └── system_analytics.py
+│   │
+│   └── main.py
+│
+├── migrations/
+│   ├── 001_create_extensions.sql
+│   ├── 002_create_subscription_plans.sql
+│   ├── 003_create_distributors.sql
+│   ├── 004_create_customers.sql
+│   ├── 005_create_catalog.sql
+│   ├── 006_create_discount_rules.sql
+│   ├── 007_create_delivery_zones.sql
+│   ├── 008_create_sessions.sql
+│   ├── 009_create_orders.sql
+│   ├── 010_create_order_items.sql
+│   ├── 011_create_order_status_history.sql
+│   ├── 012_create_payments.sql
+│   ├── 013_create_complaints.sql
+│   ├── 014_create_support_tickets.sql
+│   ├── 015_create_prospects.sql
+│   ├── 016_create_service_registry.sql
+│   ├── 017_create_notifications_log.sql
+│   ├── 018_create_audit_log.sql
+│   ├── 019_create_inventory_sync_log.sql
+│   ├── 020_create_analytics_events.sql
+│   ├── 021_create_rate_limits.sql
+│   ├── 022_create_scheduled_messages.sql
+│   ├── 023_create_catalog_import_history.sql
+│   ├── 024_create_bot_configuration.sql
+│   ├── 025_enable_rls_policies.sql
+│   ├── 026_create_indexes.sql
+│   └── 027_seed_data.sql
+│
+├── tests/
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── unit/
+│   │   ├── test_nlu.py
+│   │   ├── test_billing.py
+│   │   ├── test_order_context.py
+│   │   ├── test_fuzzy_matcher.py
+│   │   ├── test_state_machine_a.py
+│   │   ├── test_state_machine_b.py
+│   │   ├── test_subscription_manager.py
+│   │   ├── test_payment_gateways.py
+│   │   ├── test_ai_providers.py
+│   │   ├── test_voice_pipeline.py
+│   │   ├── test_message_parser.py
+│   │   └── test_security.py
+│   └── integration/
+│       ├── test_webhook_flow.py
+│       ├── test_order_flow.py
+│       ├── test_onboarding_flow.py
+│       ├── test_distributor_mgmt.py
+│       └── test_payment_flow.py
+│
+├── scripts/
+│   ├── run_migrations.py
+│   ├── seed_catalog.py
+│   ├── create_distributor.py
+│   ├── test_webhook_locally.py
+│   └── rotate_api_keys.py
+│
+├── docs/
+│   ├── architecture.md
+│   ├── api_reference.md
+│   ├── database_schema.md
+│   ├── deployment_guide.md
+│   ├── onboarding_guide.md
+│   ├── payment_gateways.md
+│   ├── ai_providers.md
+│   └── conversation_flows.md
+│
+├── .env.example
+├── .env                                  # NEVER commit
+├── .gitignore
+├── .pre-commit-config.yaml
+├── pyproject.toml
+├── requirements.txt
+├── requirements-dev.txt
+├── Procfile
+├── render.yaml
+└── README.md
+    </tree>
+  </folder_structure>
+
+  <!-- ══════════════════════════════════════════════════════════
+       DATABASE SCHEMA — COMPLETE, ROBUST, FUTURE-PROOF
+  ══════════════════════════════════════════════════════════ -->
+  <database_schema>
+    <description>
+      PostgreSQL via Supabase. Multi-tenant with distributor_id FK on all tenant tables.
+      RLS at DB level. UUIDs as PKs. Financial amounts in paisas (BIGINT) — no floats.
+      Soft deletes where applicable. Full audit trail. All tables have created_at/updated_at.
+      updated_at maintained by DB trigger on all tables.
+    </description>
+
+    <table name="subscription_plans">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="name" type="VARCHAR(100) NOT NULL"/>
+        <col name="description" type="TEXT"/>
+        <col name="monthly_fee_paisas" type="BIGINT NOT NULL"/>
+        <col name="setup_fee_paisas" type="BIGINT NOT NULL DEFAULT 0"/>
+        <col name="max_orders_per_month" type="INTEGER" note="NULL = unlimited"/>
+        <col name="max_customers" type="INTEGER" note="NULL = unlimited"/>
+        <col name="features" type="JSONB DEFAULT '{}'"/>
+        <col name="is_active" type="BOOLEAN DEFAULT true"/>
+        <col name="created_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+        <col name="updated_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+      </columns>
+    </table>
+
+    <table name="distributors">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="business_name" type="VARCHAR(255) NOT NULL"/>
+        <col name="owner_name" type="VARCHAR(255) NOT NULL"/>
+        <col name="whatsapp_number" type="VARCHAR(20) NOT NULL UNIQUE"/>
+        <col name="whatsapp_phone_number_id" type="VARCHAR(100) NOT NULL UNIQUE"/>
+        <col name="whatsapp_group_id" type="VARCHAR(100)"/>
+        <col name="city" type="VARCHAR(100)"/>
+        <col name="address" type="TEXT"/>
+        <col name="cnic_encrypted" type="TEXT" note="Fernet-encrypted CNIC"/>
+        <col name="email" type="VARCHAR(255)"/>
+        <col name="plan_id" type="UUID REFERENCES subscription_plans(id)"/>
+        <col name="subscription_status" type="VARCHAR(50) NOT NULL DEFAULT 'trial'" note="ENUM: trial, active, expiring, suspended, cancelled"/>
+        <col name="subscription_start" type="TIMESTAMPTZ"/>
+        <col name="subscription_end" type="TIMESTAMPTZ"/>
+        <col name="trial_end" type="TIMESTAMPTZ"/>
+        <col name="grace_period_days" type="INTEGER DEFAULT 3"/>
+        <col name="deployment_version" type="VARCHAR(50)"/>
+        <col name="bot_language_default" type="VARCHAR(20) DEFAULT 'roman_urdu'"/>
+        <col name="catalog_last_synced" type="TIMESTAMPTZ"/>
+        <col name="catalog_sync_url" type="TEXT" note="Google Drive or Supabase Storage URL for inventory sync"/>
+        <col name="onboarding_completed" type="BOOLEAN DEFAULT false"/>
+        <col name="onboarding_completed_at" type="TIMESTAMPTZ"/>
+        <col name="preferred_payment_gateway" type="VARCHAR(50)" note="Override ACTIVE_PAYMENT_GATEWAY for this distributor's subscription fees"/>
+        <col name="is_active" type="BOOLEAN DEFAULT true"/>
+        <col name="is_deleted" type="BOOLEAN DEFAULT false"/>
+        <col name="deleted_at" type="TIMESTAMPTZ"/>
+        <col name="notes" type="TEXT"/>
+        <col name="metadata" type="JSONB DEFAULT '{}'"/>
+        <col name="created_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+        <col name="updated_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+      </columns>
+    </table>
+
+    <table name="customers">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="distributor_id" type="UUID NOT NULL REFERENCES distributors(id) ON DELETE CASCADE"/>
+        <col name="whatsapp_number" type="VARCHAR(20) NOT NULL"/>
+        <col name="name" type="VARCHAR(255) NOT NULL"/>
+        <col name="shop_name" type="VARCHAR(255) NOT NULL"/>
+        <col name="address" type="TEXT"/>
+        <col name="city" type="VARCHAR(100)"/>
+        <col name="delivery_zone_id" type="UUID REFERENCES delivery_zones(id)"/>
+        <col name="language_preference" type="VARCHAR(20) DEFAULT 'roman_urdu'"/>
+        <col name="is_verified" type="BOOLEAN DEFAULT false"/>
+        <col name="credit_limit_paisas" type="BIGINT DEFAULT 0"/>
+        <col name="outstanding_balance_paisas" type="BIGINT DEFAULT 0"/>
+        <col name="is_active" type="BOOLEAN DEFAULT true"/>
+        <col name="is_blocked" type="BOOLEAN DEFAULT false"/>
+        <col name="blocked_reason" type="TEXT"/>
+        <col name="blocked_at" type="TIMESTAMPTZ"/>
+        <col name="last_order_at" type="TIMESTAMPTZ"/>
+        <col name="total_orders" type="INTEGER DEFAULT 0"/>
+        <col name="total_spend_paisas" type="BIGINT DEFAULT 0"/>
+        <col name="tags" type="TEXT[]"/>
+        <col name="notes" type="TEXT"/>
+        <col name="metadata" type="JSONB DEFAULT '{}'"/>
+        <col name="registered_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+        <col name="created_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+        <col name="updated_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+        <constraint>UNIQUE(distributor_id, whatsapp_number)</constraint>
+      </columns>
+    </table>
+
+    <table name="catalog">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="distributor_id" type="UUID NOT NULL REFERENCES distributors(id) ON DELETE CASCADE"/>
+        <col name="medicine_name" type="VARCHAR(500) NOT NULL"/>
+        <col name="generic_name" type="VARCHAR(500)"/>
+        <col name="brand_name" type="VARCHAR(255)"/>
+        <col name="manufacturer" type="VARCHAR(255)"/>
+        <col name="category" type="VARCHAR(100)"/>
+        <col name="form" type="VARCHAR(100)" note="tablet, capsule, syrup, injection, sachet, cream, drops"/>
+        <col name="strength" type="VARCHAR(100)"/>
+        <col name="unit" type="VARCHAR(50)" note="strip, box, carton, bottle, vial, sachet"/>
+        <col name="units_per_pack" type="INTEGER DEFAULT 1"/>
+        <col name="price_per_unit_paisas" type="BIGINT NOT NULL"/>
+        <col name="mrp_paisas" type="BIGINT"/>
+        <col name="stock_quantity" type="INTEGER DEFAULT 0"/>
+        <col name="reserved_quantity" type="INTEGER DEFAULT 0" note="Qty reserved in pending confirmed orders"/>
+        <col name="low_stock_threshold" type="INTEGER DEFAULT 10"/>
+        <col name="is_in_stock" type="BOOLEAN DEFAULT true"/>
+        <col name="allow_order_when_out_of_stock" type="BOOLEAN DEFAULT true"/>
+        <col name="requires_prescription" type="BOOLEAN DEFAULT false"/>
+        <col name="is_controlled_substance" type="BOOLEAN DEFAULT false"/>
+        <col name="search_keywords" type="TEXT[]"/>
+        <col name="sku" type="VARCHAR(100)"/>
+        <col name="barcode" type="VARCHAR(100)"/>
+        <col name="image_url" type="TEXT"/>
+        <col name="is_active" type="BOOLEAN DEFAULT true"/>
+        <col name="is_deleted" type="BOOLEAN DEFAULT false"/>
+        <col name="deleted_at" type="TIMESTAMPTZ"/>
+        <col name="metadata" type="JSONB DEFAULT '{}'"/>
+        <col name="created_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+        <col name="updated_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+        <constraint>UNIQUE(distributor_id, sku) WHERE sku IS NOT NULL AND is_deleted = false</constraint>
+      </columns>
+    </table>
+
+    <table name="discount_rules">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="distributor_id" type="UUID NOT NULL REFERENCES distributors(id) ON DELETE CASCADE"/>
+        <col name="catalog_id" type="UUID REFERENCES catalog(id) ON DELETE CASCADE" note="NULL = applies to all items"/>
+        <col name="rule_name" type="VARCHAR(255)"/>
+        <col name="rule_type" type="VARCHAR(50) NOT NULL" note="ENUM: bonus_units, percentage_discount, flat_discount, minimum_order, tiered_pricing"/>
+        <col name="buy_quantity" type="INTEGER"/>
+        <col name="get_quantity" type="INTEGER"/>
+        <col name="discount_percentage" type="DECIMAL(5,2)"/>
+        <col name="discount_flat_paisas" type="BIGINT"/>
+        <col name="minimum_order_quantity" type="INTEGER"/>
+        <col name="minimum_order_value_paisas" type="BIGINT"/>
+        <col name="applicable_customer_tags" type="TEXT[]" note="NULL = all customers"/>
+        <col name="priority" type="INTEGER DEFAULT 0" note="Higher = applied first if multiple rules match"/>
+        <col name="is_stackable" type="BOOLEAN DEFAULT false" note="Can combine with other rules"/>
+        <col name="valid_from" type="TIMESTAMPTZ"/>
+        <col name="valid_until" type="TIMESTAMPTZ"/>
+        <col name="usage_limit" type="INTEGER" note="Max times this rule can be used — NULL = unlimited"/>
+        <col name="usage_count" type="INTEGER DEFAULT 0"/>
+        <col name="is_active" type="BOOLEAN DEFAULT true"/>
+        <col name="created_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+        <col name="updated_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+      </columns>
+    </table>
+
+    <table name="delivery_zones">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="distributor_id" type="UUID NOT NULL REFERENCES distributors(id) ON DELETE CASCADE"/>
+        <col name="name" type="VARCHAR(255) NOT NULL"/>
+        <col name="areas" type="TEXT[]"/>
+        <col name="delivery_days" type="TEXT[]"/>
+        <col name="estimated_delivery_hours" type="INTEGER DEFAULT 24"/>
+        <col name="delivery_charges_paisas" type="BIGINT DEFAULT 0"/>
+        <col name="minimum_order_for_free_delivery_paisas" type="BIGINT"/>
+        <col name="is_active" type="BOOLEAN DEFAULT true"/>
+        <col name="created_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+        <col name="updated_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+      </columns>
+    </table>
+
+    <table name="sessions">
+      <purpose>Full conversation state — process-restart-safe</purpose>
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="distributor_id" type="UUID NOT NULL REFERENCES distributors(id) ON DELETE CASCADE"/>
+        <col name="whatsapp_number" type="VARCHAR(20) NOT NULL"/>
+        <col name="customer_id" type="UUID REFERENCES customers(id)"/>
+        <col name="channel" type="VARCHAR(10) NOT NULL DEFAULT 'A'" note="ENUM: A, B"/>
+        <col name="current_state" type="VARCHAR(100) NOT NULL DEFAULT 'idle'"/>
+        <col name="previous_state" type="VARCHAR(100)"/>
+        <col name="state_data" type="JSONB DEFAULT '{}'"/>
+        <col name="conversation_history" type="JSONB DEFAULT '[]'" note="Last 15 turns for AI context — rolling window"/>
+        <col name="pending_order_draft" type="JSONB DEFAULT '{}'" note="FULL order context per ORDER CONTEXT SCHEMA — see spec above"/>
+        <col name="language" type="VARCHAR(20) DEFAULT 'roman_urdu'"/>
+        <col name="retry_count" type="INTEGER DEFAULT 0"/>
+        <col name="handoff_mode" type="BOOLEAN DEFAULT false" note="True when human agent requested — AI paused"/>
+        <col name="last_message_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+        <col name="expires_at" type="TIMESTAMPTZ DEFAULT NOW() + INTERVAL '24 hours'"/>
+        <col name="created_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+        <col name="updated_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+        <constraint>UNIQUE(distributor_id, whatsapp_number)</constraint>
+      </columns>
+    </table>
+
+    <table name="orders">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="order_number" type="VARCHAR(20) NOT NULL UNIQUE"/>
+        <col name="distributor_id" type="UUID NOT NULL REFERENCES distributors(id)"/>
+        <col name="customer_id" type="UUID NOT NULL REFERENCES customers(id)"/>
+        <col name="status" type="VARCHAR(50) NOT NULL DEFAULT 'pending'" note="ENUM: pending, confirmed, processing, dispatched, delivered, cancelled, returned, partially_fulfilled"/>
+        <col name="subtotal_paisas" type="BIGINT NOT NULL DEFAULT 0"/>
+        <col name="discount_paisas" type="BIGINT DEFAULT 0"/>
+        <col name="delivery_charges_paisas" type="BIGINT DEFAULT 0"/>
+        <col name="total_paisas" type="BIGINT NOT NULL DEFAULT 0"/>
+        <col name="payment_status" type="VARCHAR(50) DEFAULT 'unpaid'" note="ENUM: unpaid, partial, paid, credit"/>
+        <col name="payment_method" type="VARCHAR(50)" note="ENUM: cash, credit, jazzcash, easypaisa, safepay, nayapay, bank_transfer, dummy"/>
+        <col name="delivery_address" type="TEXT"/>
+        <col name="delivery_zone_id" type="UUID REFERENCES delivery_zones(id)"/>
+        <col name="estimated_delivery_at" type="TIMESTAMPTZ"/>
+        <col name="dispatched_at" type="TIMESTAMPTZ"/>
+        <col name="delivered_at" type="TIMESTAMPTZ"/>
+        <col name="notes" type="TEXT"/>
+        <col name="internal_notes" type="TEXT"/>
+        <col name="discount_requests" type="JSONB DEFAULT '[]'"/>
+        <col name="discount_approval_status" type="VARCHAR(50) DEFAULT 'not_requested'"/>
+        <col name="source" type="VARCHAR(50) DEFAULT 'whatsapp'"/>
+        <col name="is_quick_reorder" type="BOOLEAN DEFAULT false"/>
+        <col name="source_order_id" type="UUID REFERENCES orders(id)" note="For quick reorders"/>
+        <col name="whatsapp_logged_at" type="TIMESTAMPTZ"/>
+        <col name="excel_logged_at" type="TIMESTAMPTZ"/>
+        <col name="order_context_snapshot" type="JSONB DEFAULT '{}'" note="Snapshot of order context at confirmation — for audit"/>
+        <col name="metadata" type="JSONB DEFAULT '{}'"/>
+        <col name="created_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+        <col name="updated_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+      </columns>
+    </table>
+
+    <table name="order_items">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="order_id" type="UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE"/>
+        <col name="distributor_id" type="UUID NOT NULL REFERENCES distributors(id)"/>
+        <col name="catalog_id" type="UUID REFERENCES catalog(id)"/>
+        <col name="medicine_name_raw" type="VARCHAR(500)" note="Exactly as customer typed/said"/>
+        <col name="medicine_name" type="VARCHAR(500) NOT NULL" note="Matched/display name"/>
+        <col name="unit" type="VARCHAR(50)"/>
+        <col name="quantity_ordered" type="INTEGER NOT NULL"/>
+        <col name="quantity_fulfilled" type="INTEGER DEFAULT 0"/>
+        <col name="price_per_unit_paisas" type="BIGINT NOT NULL"/>
+        <col name="line_total_paisas" type="BIGINT NOT NULL"/>
+        <col name="discount_paisas" type="BIGINT DEFAULT 0"/>
+        <col name="bonus_units_given" type="INTEGER DEFAULT 0"/>
+        <col name="is_out_of_stock_order" type="BOOLEAN DEFAULT false"/>
+        <col name="is_unlisted_item" type="BOOLEAN DEFAULT false"/>
+        <col name="input_method" type="VARCHAR(20)" note="ENUM: text, voice, button_selection"/>
+        <col name="fuzzy_match_score" type="DECIMAL(5,2)"/>
+        <col name="notes" type="TEXT"/>
+        <col name="created_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+      </columns>
+    </table>
+
+    <table name="order_status_history">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="order_id" type="UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE"/>
+        <col name="distributor_id" type="UUID NOT NULL"/>
+        <col name="from_status" type="VARCHAR(50)"/>
+        <col name="to_status" type="VARCHAR(50) NOT NULL"/>
+        <col name="changed_by" type="VARCHAR(50)" note="ENUM: customer, distributor, system, scheduler"/>
+        <col name="notes" type="TEXT"/>
+        <col name="created_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+      </columns>
+    </table>
+
+    <table name="payments">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="transaction_reference" type="VARCHAR(255) NOT NULL UNIQUE"/>
+        <col name="payment_type" type="VARCHAR(50) NOT NULL" note="ENUM: subscription_fee, setup_fee, order_payment"/>
+        <col name="distributor_id" type="UUID REFERENCES distributors(id)"/>
+        <col name="order_id" type="UUID REFERENCES orders(id)"/>
+        <col name="customer_id" type="UUID REFERENCES customers(id)"/>
+        <col name="gateway" type="VARCHAR(50) NOT NULL" note="ENUM: jazzcash, easypaisa, safepay, nayapay, bank_transfer, dummy, manual"/>
+        <col name="gateway_transaction_id" type="VARCHAR(255)"/>
+        <col name="gateway_order_id" type="VARCHAR(255)"/>
+        <col name="amount_paisas" type="BIGINT NOT NULL"/>
+        <col name="currency" type="VARCHAR(10) DEFAULT 'PKR'"/>
+        <col name="status" type="VARCHAR(50) NOT NULL DEFAULT 'pending'" note="ENUM: pending, completed, failed, refunded, expired, cancelled"/>
+        <col name="payment_link" type="TEXT"/>
+        <col name="payment_link_expires_at" type="TIMESTAMPTZ"/>
+        <col name="paid_at" type="TIMESTAMPTZ"/>
+        <col name="gateway_response" type="JSONB DEFAULT '{}'"/>
+        <col name="failure_reason" type="TEXT"/>
+        <col name="refund_amount_paisas" type="BIGINT DEFAULT 0"/>
+        <col name="refunded_at" type="TIMESTAMPTZ"/>
+        <col name="screenshot_storage_path" type="TEXT" note="For bank_transfer screenshots"/>
+        <col name="manual_confirmed_at" type="TIMESTAMPTZ" note="For manual bank confirmations"/>
+        <col name="metadata" type="JSONB DEFAULT '{}'"/>
+        <col name="created_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+        <col name="updated_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+      </columns>
+    </table>
+
+    <table name="complaints">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="ticket_number" type="VARCHAR(20) NOT NULL UNIQUE"/>
+        <col name="distributor_id" type="UUID NOT NULL REFERENCES distributors(id)"/>
+        <col name="customer_id" type="UUID NOT NULL REFERENCES customers(id)"/>
+        <col name="order_id" type="UUID REFERENCES orders(id)"/>
+        <col name="category" type="VARCHAR(100) NOT NULL" note="wrong_item, late_delivery, damaged_goods, expired_medicine, short_quantity, billing_error, other"/>
+        <col name="description" type="TEXT NOT NULL"/>
+        <col name="status" type="VARCHAR(50) NOT NULL DEFAULT 'open'" note="ENUM: open, in_progress, resolved, closed, rejected"/>
+        <col name="priority" type="VARCHAR(20) DEFAULT 'normal'" note="ENUM: low, normal, high, urgent"/>
+        <col name="resolution_notes" type="TEXT"/>
+        <col name="resolved_at" type="TIMESTAMPTZ"/>
+        <col name="escalated_to_owner" type="BOOLEAN DEFAULT false"/>
+        <col name="media_urls" type="TEXT[]"/>
+        <col name="metadata" type="JSONB DEFAULT '{}'"/>
+        <col name="created_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+        <col name="updated_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+      </columns>
+    </table>
+
+    <table name="support_tickets">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="ticket_number" type="VARCHAR(20) NOT NULL UNIQUE"/>
+        <col name="distributor_id" type="UUID NOT NULL REFERENCES distributors(id)"/>
+        <col name="category" type="VARCHAR(100)" note="bot_issue, billing, setup, feature_request, gateway_issue, other"/>
+        <col name="description" type="TEXT NOT NULL"/>
+        <col name="status" type="VARCHAR(50) DEFAULT 'open'" note="ENUM: open, in_progress, resolved, closed"/>
+        <col name="priority" type="VARCHAR(20) DEFAULT 'normal'"/>
+        <col name="owner_response" type="TEXT"/>
+        <col name="resolved_at" type="TIMESTAMPTZ"/>
+        <col name="metadata" type="JSONB DEFAULT '{}'"/>
+        <col name="created_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+        <col name="updated_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+      </columns>
+    </table>
+
+    <table name="prospects">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="whatsapp_number" type="VARCHAR(20) NOT NULL UNIQUE"/>
+        <col name="name" type="VARCHAR(255)"/>
+        <col name="business_name" type="VARCHAR(255)"/>
+        <col name="business_type" type="VARCHAR(100)"/>
+        <col name="city" type="VARCHAR(100)"/>
+        <col name="estimated_retailer_count" type="INTEGER"/>
+        <col name="monthly_order_estimate" type="INTEGER"/>
+        <col name="interested_service_id" type="UUID REFERENCES service_registry(id)"/>
+        <col name="status" type="VARCHAR(50) DEFAULT 'new'" note="new, qualified, demo_booked, proposal_sent, payment_pending, converted, lost, waitlisted"/>
+        <col name="demo_booked_at" type="TIMESTAMPTZ"/>
+        <col name="demo_slot" type="TIMESTAMPTZ"/>
+        <col name="converted_at" type="TIMESTAMPTZ"/>
+        <col name="converted_distributor_id" type="UUID REFERENCES distributors(id)"/>
+        <col name="lost_reason" type="TEXT"/>
+        <col name="waitlist_service" type="VARCHAR(255)"/>
+        <col name="follow_up_at" type="TIMESTAMPTZ"/>
+        <col name="preferred_payment_gateway" type="VARCHAR(50)" note="Gateway preference for onboarding payment"/>
+        <col name="metadata" type="JSONB DEFAULT '{}'"/>
+        <col name="created_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+        <col name="updated_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+      </columns>
+    </table>
+
+    <table name="service_registry">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="name" type="VARCHAR(255) NOT NULL"/>
+        <col name="slug" type="VARCHAR(100) NOT NULL UNIQUE"/>
+        <col name="description" type="TEXT"/>
+        <col name="short_description" type="VARCHAR(500)"/>
+        <col name="setup_fee_paisas" type="BIGINT DEFAULT 0"/>
+        <col name="monthly_fee_paisas" type="BIGINT DEFAULT 0"/>
+        <col name="demo_video_url" type="TEXT"/>
+        <col name="catalog_url" type="TEXT"/>
+        <col name="target_business_types" type="TEXT[]"/>
+        <col name="sales_flow_handler" type="VARCHAR(100)"/>
+        <col name="is_available" type="BOOLEAN DEFAULT true"/>
+        <col name="is_coming_soon" type="BOOLEAN DEFAULT false"/>
+        <col name="metadata" type="JSONB DEFAULT '{}'"/>
+        <col name="created_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+        <col name="updated_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+      </columns>
+    </table>
+
+    <table name="notifications_log">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="distributor_id" type="UUID REFERENCES distributors(id)"/>
+        <col name="recipient_number_masked" type="VARCHAR(20)" note="Last 4 digits only — PII protection"/>
+        <col name="recipient_type" type="VARCHAR(50)" note="customer, distributor, prospect, owner"/>
+        <col name="notification_type" type="VARCHAR(100) NOT NULL"/>
+        <col name="message_preview" type="VARCHAR(500)"/>
+        <col name="whatsapp_message_id" type="VARCHAR(255)"/>
+        <col name="delivery_status" type="VARCHAR(50) DEFAULT 'sent'" note="ENUM: sent, delivered, read, failed"/>
+        <col name="delivery_status_updated_at" type="TIMESTAMPTZ"/>
+        <col name="reference_id" type="UUID"/>
+        <col name="reference_type" type="VARCHAR(50)"/>
+        <col name="error_message" type="TEXT"/>
+        <col name="sent_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+      </columns>
+    </table>
+
+    <table name="audit_log">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="actor_type" type="VARCHAR(50) NOT NULL" note="customer, distributor, owner, system, scheduler"/>
+        <col name="actor_id" type="UUID"/>
+        <col name="actor_whatsapp_masked" type="VARCHAR(20)" note="Last 4 digits only"/>
+        <col name="distributor_id" type="UUID REFERENCES distributors(id)"/>
+        <col name="action" type="VARCHAR(255) NOT NULL"/>
+        <col name="entity_type" type="VARCHAR(100)"/>
+        <col name="entity_id" type="UUID"/>
+        <col name="before_state" type="JSONB"/>
+        <col name="after_state" type="JSONB"/>
+        <col name="metadata" type="JSONB DEFAULT '{}'"/>
+        <col name="created_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+      </columns>
+      <note>Immutable — no updates, no deletes on this table. RLS: INSERT only.</note>
+    </table>
+
+    <table name="inventory_sync_log">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="distributor_id" type="UUID NOT NULL REFERENCES distributors(id)"/>
+        <col name="sync_source" type="VARCHAR(100)" note="google_drive, supabase_upload, manual_api"/>
+        <col name="file_name" type="VARCHAR(500)"/>
+        <col name="file_url" type="TEXT"/>
+        <col name="status" type="VARCHAR(50)" note="started, completed, failed, partial"/>
+        <col name="rows_processed" type="INTEGER DEFAULT 0"/>
+        <col name="rows_updated" type="INTEGER DEFAULT 0"/>
+        <col name="rows_inserted" type="INTEGER DEFAULT 0"/>
+        <col name="rows_failed" type="INTEGER DEFAULT 0"/>
+        <col name="error_details" type="JSONB DEFAULT '[]'"/>
+        <col name="started_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+        <col name="completed_at" type="TIMESTAMPTZ"/>
+      </columns>
+    </table>
+
+    <table name="analytics_events">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="distributor_id" type="UUID REFERENCES distributors(id)"/>
+        <col name="event_type" type="VARCHAR(255) NOT NULL"/>
+        <col name="channel" type="VARCHAR(10)" note="A, B, system"/>
+        <col name="customer_id" type="UUID REFERENCES customers(id)"/>
+        <col name="session_id" type="UUID REFERENCES sessions(id)"/>
+        <col name="properties" type="JSONB DEFAULT '{}'"/>
+        <col name="duration_ms" type="INTEGER"/>
+        <col name="ai_provider" type="VARCHAR(50)" note="Which AI provider handled this event"/>
+        <col name="ai_tokens_used" type="INTEGER"/>
+        <col name="ai_cost_paisas" type="INTEGER"/>
+        <col name="payment_gateway" type="VARCHAR(50)" note="Which gateway if payment event"/>
+        <col name="occurred_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+      </columns>
+    </table>
+
+    <table name="rate_limits">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="distributor_id" type="UUID REFERENCES distributors(id)"/>
+        <col name="whatsapp_number" type="VARCHAR(20) NOT NULL"/>
+        <col name="window_start" type="TIMESTAMPTZ NOT NULL"/>
+        <col name="window_end" type="TIMESTAMPTZ NOT NULL"/>
+        <col name="message_count" type="INTEGER DEFAULT 0"/>
+        <col name="voice_count" type="INTEGER DEFAULT 0"/>
+        <col name="ai_call_count" type="INTEGER DEFAULT 0"/>
+        <col name="is_throttled" type="BOOLEAN DEFAULT false"/>
+        <constraint>UNIQUE(distributor_id, whatsapp_number, window_start)</constraint>
+      </columns>
+    </table>
+
+    <table name="scheduled_messages">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="distributor_id" type="UUID REFERENCES distributors(id)"/>
+        <col name="recipient_number" type="VARCHAR(20) NOT NULL"/>
+        <col name="recipient_type" type="VARCHAR(50) NOT NULL"/>
+        <col name="message_type" type="VARCHAR(100) NOT NULL"/>
+        <col name="message_payload" type="JSONB NOT NULL"/>
+        <col name="scheduled_for" type="TIMESTAMPTZ NOT NULL"/>
+        <col name="status" type="VARCHAR(50) DEFAULT 'pending'" note="ENUM: pending, sent, failed, cancelled"/>
+        <col name="retry_count" type="INTEGER DEFAULT 0"/>
+        <col name="max_retries" type="INTEGER DEFAULT 3"/>
+        <col name="sent_at" type="TIMESTAMPTZ"/>
+        <col name="error_message" type="TEXT"/>
+        <col name="reference_id" type="UUID"/>
+        <col name="reference_type" type="VARCHAR(50)"/>
+        <col name="idempotency_key" type="VARCHAR(255) UNIQUE" note="Prevent duplicate scheduled messages"/>
+        <col name="created_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+      </columns>
+    </table>
+
+    <table name="catalog_import_history">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="distributor_id" type="UUID NOT NULL REFERENCES distributors(id)"/>
+        <col name="file_name" type="VARCHAR(500)"/>
+        <col name="storage_path" type="TEXT"/>
+        <col name="items_total" type="INTEGER DEFAULT 0"/>
+        <col name="items_imported" type="INTEGER DEFAULT 0"/>
+        <col name="items_failed" type="INTEGER DEFAULT 0"/>
+        <col name="status" type="VARCHAR(50)"/>
+        <col name="error_log" type="JSONB DEFAULT '[]'"/>
+        <col name="imported_by" type="VARCHAR(100)" note="scheduler, manual, api"/>
+        <col name="created_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+      </columns>
+    </table>
+
+    <table name="bot_configuration">
+      <columns>
+        <col name="id" type="UUID PRIMARY KEY DEFAULT uuid_generate_v4()"/>
+        <col name="distributor_id" type="UUID NOT NULL UNIQUE REFERENCES distributors(id) ON DELETE CASCADE"/>
+        <col name="welcome_message_override" type="TEXT"/>
+        <col name="business_hours_start" type="TIME DEFAULT '08:00'"/>
+        <col name="business_hours_end" type="TIME DEFAULT '20:00'"/>
+        <col name="timezone" type="VARCHAR(50) DEFAULT 'Asia/Karachi'"/>
+        <col name="out_of_hours_message" type="TEXT"/>
+        <col name="allow_orders_outside_hours" type="BOOLEAN DEFAULT true"/>
+        <col name="voice_enabled" type="BOOLEAN DEFAULT true"/>
+        <col name="catalog_pdf_enabled" type="BOOLEAN DEFAULT true"/>
+        <col name="discount_requests_enabled" type="BOOLEAN DEFAULT true"/>
+        <col name="credit_orders_enabled" type="BOOLEAN DEFAULT false"/>
+        <col name="minimum_order_value_paisas" type="BIGINT DEFAULT 0"/>
+        <col name="max_items_per_order" type="INTEGER DEFAULT 50"/>
+        <col name="session_timeout_minutes" type="INTEGER DEFAULT 60"/>
+        <col name="ai_temperature" type="DECIMAL(3,2) DEFAULT 0.30"/>
+        <col name="custom_system_prompt_suffix" type="TEXT"/>
+        <col name="excel_report_email" type="VARCHAR(255)"/>
+        <col name="excel_report_schedule" type="VARCHAR(50) DEFAULT 'daily_evening'" note="realtime, daily_morning, daily_evening, weekly"/>
+        <col name="preferred_payment_gateways" type="TEXT[]" note="Ordered list of gateways to offer customers"/>
+        <col name="metadata" type="JSONB DEFAULT '{}'"/>
+        <col name="created_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+        <col name="updated_at" type="TIMESTAMPTZ DEFAULT NOW()"/>
+      </columns>
+    </table>
+
+    <indexes>
+      <index>CREATE INDEX idx_customers_distributor_number ON customers (distributor_id, whatsapp_number)</index>
+      <index>CREATE INDEX idx_sessions_distributor_number ON sessions (distributor_id, whatsapp_number)</index>
+      <index>CREATE INDEX idx_sessions_expiry ON sessions (expires_at) WHERE current_state != 'idle'</index>
+      <index>CREATE INDEX idx_orders_distributor_date ON orders (distributor_id, created_at DESC)</index>
+      <index>CREATE INDEX idx_orders_status ON orders (distributor_id, status)</index>
+      <index>CREATE INDEX idx_orders_customer ON orders (customer_id)</index>
+      <index>CREATE INDEX idx_order_items_order ON order_items (order_id)</index>
+      <index>CREATE INDEX idx_catalog_active ON catalog (distributor_id) WHERE is_active = true AND is_deleted = false</index>
+      <index>CREATE INDEX idx_catalog_name ON catalog (distributor_id, medicine_name text_pattern_ops)</index>
+      <index>CREATE INDEX idx_catalog_keywords ON catalog USING GIN (search_keywords)</index>
+      <index>CREATE INDEX idx_payments_distributor ON payments (distributor_id, status)</index>
+      <index>CREATE INDEX idx_payments_gateway_txn ON payments (gateway_transaction_id)</index>
+      <index>CREATE INDEX idx_distributors_subscription ON distributors (subscription_end) WHERE subscription_status IN ('active', 'expiring')</index>
+      <index>CREATE INDEX idx_analytics_distributor_time ON analytics_events (distributor_id, occurred_at DESC)</index>
+      <index>CREATE INDEX idx_scheduled_messages_due ON scheduled_messages (scheduled_for, status) WHERE status = 'pending'</index>
+      <index>CREATE INDEX idx_audit_entity ON audit_log (entity_type, entity_id)</index>
+      <index>CREATE INDEX idx_rate_limits_lookup ON rate_limits (distributor_id, whatsapp_number, window_start)</index>
+    </indexes>
+
+  </database_schema>
+
+  <!-- ══════════════════════════════════════════════════════════
+       ENVIRONMENT VARIABLES — COMPLETE
+  ══════════════════════════════════════════════════════════ -->
+  <environment_variables>
+    <section name="Application">
+      <var name="APP_ENV" values="development, staging, production"/>
+      <var name="APP_HOST" default="0.0.0.0"/>
+      <var name="APP_PORT" default="8000"/>
+      <var name="APP_SECRET_KEY" desc="64-char random string for internal signing"/>
+      <var name="LOG_LEVEL" values="DEBUG, INFO, WARNING, ERROR"/>
+      <var name="ENCRYPTION_KEY" desc="Fernet key for CNIC and sensitive field encryption — generate with Fernet.generate_key()"/>
+      <var name="ADMIN_API_KEY" desc="X-Admin-Key header value for admin endpoints"/>
+    </section>
+
+    <section name="Meta WhatsApp API">
+      <var name="META_APP_ID"/>
+      <var name="META_APP_SECRET"/>
+      <var name="META_VERIFY_TOKEN" desc="You define this — used for webhook verification"/>
+      <var name="META_API_VERSION" default="v19.0"/>
+      <var name="META_API_BASE_URL" default="https://graph.facebook.com"/>
+      <var name="OWNER_PHONE_NUMBER_ID" desc="Meta Phone Number ID for Channel B owner SIM"/>
+      <var name="OWNER_WHATSAPP_NUMBER" desc="E.164 format owner number"/>
+    </section>
+
+    <section name="AI Providers">
+      <var name="ACTIVE_AI_PROVIDER" values="gemini, openai, anthropic, cohere, openrouter"/>
+      <var name="ACTIVE_STT_PROVIDER" values="gemini, whisper" desc="Defaults to ACTIVE_AI_PROVIDER if compatible"/>
+      <var name="AI_TEXT_MODEL" desc="Override default model for chosen provider"/>
+      <var name="AI_PREMIUM_MODEL" desc="Premium model for complex reasoning tasks"/>
+      <var name="AI_MAX_TOKENS" default="2048"/>
+      <var name="AI_TEMPERATURE" default="0.30"/>
+      <var name="GEMINI_API_KEY"/>
+      <var name="OPENAI_API_KEY"/>
+      <var name="ANTHROPIC_API_KEY"/>
+      <var name="COHERE_API_KEY"/>
+      <var name="OPENROUTER_API_KEY"/>
+      <var name="OPENROUTER_MODEL" desc="e.g., meta-llama/llama-3.1-8b-instruct"/>
+    </section>
+
+    <section name="Supabase">
+      <var name="SUPABASE_URL"/>
+      <var name="SUPABASE_SERVICE_KEY" desc="Service role — full access — never expose"/>
+      <var name="SUPABASE_ANON_KEY"/>
+    </section>
+
+    <section name="Payment Gateways">
+      <var name="ACTIVE_PAYMENT_GATEWAY" values="jazzcash, easypaisa, safepay, nayapay, bank_transfer, dummy"/>
+      <var name="PAYMENT_CALLBACK_BASE_URL" desc="Public HTTPS URL for gateway callbacks"/>
+      <var name="PAYMENT_LINK_EXPIRY_MINUTES" default="60"/>
+      <var name="JAZZCASH_MERCHANT_ID"/>
+      <var name="JAZZCASH_PASSWORD"/>
+      <var name="JAZZCASH_INTEGRITY_SALT"/>
+      <var name="JAZZCASH_API_URL"/>
+      <var name="EASYPAISA_STORE_ID"/>
+      <var name="EASYPAISA_HASH_KEY"/>
+      <var name="EASYPAISA_API_URL"/>
+      <var name="SAFEPAY_API_KEY"/>
+      <var name="SAFEPAY_SECRET_KEY"/>
+      <var name="SAFEPAY_API_URL" default="https://api.getsafepay.com"/>
+      <var name="SAFEPAY_WEBHOOK_SECRET"/>
+      <var name="NAYAPAY_MERCHANT_ID"/>
+      <var name="NAYAPAY_API_KEY"/>
+      <var name="NAYAPAY_SECRET"/>
+      <var name="NAYAPAY_API_URL"/>
+      <var name="BANK_ACCOUNT_NAME"/>
+      <var name="BANK_ACCOUNT_NUMBER"/>
+      <var name="BANK_IBAN"/>
+      <var name="BANK_NAME"/>
+      <var name="BANK_BRANCH"/>
+      <var name="DUMMY_GATEWAY_AUTO_CONFIRM" values="true, false"/>
+      <var name="DUMMY_GATEWAY_CONFIRM_DELAY_SECONDS" default="10"/>
+    </section>
+
+    <section name="Scheduler">
+      <var name="SCHEDULER_TIMEZONE" default="Asia/Karachi"/>
+      <var name="INVENTORY_SYNC_INTERVAL_MINUTES" default="120"/>
+      <var name="SESSION_CLEANUP_INTERVAL_HOURS" default="6"/>
+      <var name="REMINDER_CHECK_INTERVAL_HOURS" default="12"/>
+    </section>
+
+    <section name="Feature Flags">
+      <var name="ENABLE_VOICE_PROCESSING" default="true"/>
+      <var name="ENABLE_INVENTORY_SYNC" default="true"/>
+      <var name="ENABLE_EXCEL_REPORTS" default="true"/>
+      <var name="ENABLE_PDF_CATALOG" default="true"/>
+      <var name="ENABLE_CHANNEL_B" default="true"/>
+      <var name="ENABLE_ANALYTICS" default="true"/>
+      <var name="ENABLE_CREDIT_ACCOUNTS" default="false"/>
+    </section>
+
+    <section name="Email">
+      <var name="RESEND_API_KEY" desc="Resend.com for Excel report delivery"/>
+      <var name="EMAIL_FROM_ADDRESS" default="noreply@teletraan.pk"/>
+    </section>
+  </environment_variables>
+
+  <!-- ══════════════════════════════════════════════════════════
+       AI PROVIDER ABSTRACTION — IMPLEMENTATION SPEC
+  ══════════════════════════════════════════════════════════ -->
+  <ai_provider_abstraction>
+    <abstract_base>
+      app/ai/base.py must define AIProvider as an abstract base class with these abstract methods:
+      - generate_text(system_prompt, messages, temperature, max_tokens) → AITextResponse
+      - transcribe_audio(audio_bytes, mime_type, language_hint) → AITranscriptionResponse
+      - estimate_cost(tokens_in, tokens_out) → int (paisas)
+      - get_provider_name() → str
+      - get_model_name() → str
+      - health_check() → bool
+
+      AITextResponse must contain: content (str), tokens_used_input (int),
+      tokens_used_output (int), finish_reason (str), raw_response (dict),
+      estimated_cost_paisas (int)
+
+      AITranscriptionResponse must contain: text (str), confidence (str),
+      language_detected (str), duration_seconds (float), raw_response (dict)
+    </abstract_base>
+
+    <error_normalization>
+      Every provider must catch provider-specific exceptions and re-raise as
+      TeletraanAIError with: provider name, original error message, is_retryable (bool),
+      is_quota_exceeded (bool), is_content_filtered (bool).
+      All callers handle TeletraanAIError — never provider-specific exceptions.
+    </error_normalization>
+
+    <fallback_chain>
+      If ACTIVE_AI_PROVIDER fails and AI_FALLBACK_PROVIDER is set in env:
+      Factory automatically tries fallback provider once.
+      Fallback attempt logged to analytics_events with provider switching noted.
+      If fallback also fails: use rule-based response templates — bot continues.
+    </fallback_chain>
+  </ai_provider_abstraction>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PAYMENT GATEWAY ABSTRACTION — IMPLEMENTATION SPEC
+  ══════════════════════════════════════════════════════════ -->
+  <payment_gateway_abstraction>
+    <abstract_base>
+      app/payments/base.py must define PaymentGateway as abstract base class with:
+      - generate_payment_link(amount_paisas, reference_id, description, payer_phone) → PaymentLinkResponse
+      - verify_webhook_signature(payload_bytes, headers) → bool
+      - process_callback(payload_dict) → PaymentCallbackResult
+      - get_payment_status(gateway_transaction_id) → PaymentStatusResult
+      - cancel_payment(gateway_transaction_id) → bool
+      - get_gateway_name() → str
+      - get_gateway_metadata() → dict (supported features, limits, etc.)
+      - health_check() → bool
+
+      PaymentLinkResponse: link_url (str), gateway_order_id (str),
+      expires_at (datetime), metadata (dict)
+
+      PaymentCallbackResult: is_successful (bool), amount_paisas (int),
+      gateway_transaction_id (str), failure_reason (str or None), raw_payload (dict)
+    </abstract_base>
+
+    <idempotency>
+      All gateways must implement idempotency check:
+      Before processing any callback, check payments table for gateway_transaction_id.
+      If already processed (status = completed), return success without re-processing.
+      Log duplicate callback to audit_log. Return 200 to gateway.
+    </idempotency>
+
+    <signature_failure_handling>
+      If signature verification fails: log to audit_log with full headers and body preview.
+      Return HTTP 400 (not 401 — avoid leaking auth information).
+      Alert owner via WhatsApp if 3+ failed verifications in 10 minutes from same IP.
+    </signature_failure_handling>
+  </payment_gateway_abstraction>
+
+  <!-- ══════════════════════════════════════════════════════════
+       MODULES AND FEATURES — COMPLETE LIST (unchanged from v1
+       plus updates for multi-gateway and multi-AI)
+  ══════════════════════════════════════════════════════════ -->
+  <modules_and_features>
+    <!-- NOTE: All 34 modules from v1 remain. Key additions/changes: -->
+
+    <module id="M05_UPDATED" name="AI and NLU Engine — Multi-Provider">
+      <changes_from_v1>
+        Replace Gemini-specific calls with AIProvider factory calls.
+        Track ai_provider in all analytics_events.
+        Implement fallback chain per AI_PROVIDER_ABSTRACTION spec.
+        Support ACTIVE_STT_PROVIDER separately from ACTIVE_AI_PROVIDER.
+        Log which provider handled each request and its cost estimate.
+        Add health_check calls for AI provider in scheduler health job.
+      </changes_from_v1>
+    </module>
+
+    <module id="M06_UPDATED" name="Voice Pipeline — Multi-STT">
+      <changes_from_v1>
+        Voice pipeline routes to ACTIVE_STT_PROVIDER — not hardcoded to Gemini.
+        If ACTIVE_STT_PROVIDER = gemini: send audio bytes directly to Gemini.
+        If ACTIVE_STT_PROVIDER = whisper: send to OpenAI Whisper endpoint.
+        Both paths produce AITranscriptionResponse with same fields.
+        Audio conversion (pydub/ffmpeg) happens before sending to any STT provider.
+        STT provider health checked separately from text AI health.
+      </changes_from_v1>
+    </module>
+
+    <module id="M23_UPDATED" name="Payment Layer — Multi-Gateway">
+      <changes_from_v1>
+        All gateway logic moved to app/payments/gateways/ subdirectory.
+        Factory pattern for all gateways — ACTIVE_PAYMENT_GATEWAY env selects default.
+        Per-distributor preferred_payment_gateway override supported.
+        Add SafePay gateway: hosted checkout URL generation + HMAC webhook verification.
+        Add NayaPay gateway: merchant payment initiation + QR URL + webhook.
+        Add bank_transfer gateway: non-API flow (instructions + screenshot + manual confirm).
+        Gateway selection can be offered to payer when multiple gateways configured.
+        All gateway events tracked in analytics_events with payment_gateway field.
+        Gateway health checks in scheduler health job.
+        Payment admin commands: "list gateways", "check gateway [name]" via admin API.
+        docs/payment_gateways.md — full integration guide for each gateway.
+      </changes_from_v1>
+    </module>
+
+    <module id="M35" name="Order Context Manager">
+      <features>
+        <feature>Dedicated module: app/orders/context_manager.py</feature>
+        <feature>Pydantic model: app/db/models/order_context.py — exact model of ORDER CONTEXT SCHEMA</feature>
+        <feature>create_empty_context() — initialize blank order context with session_order_id</feature>
+        <feature>add_item_to_context(context, item_data) → updated context with recalculated pricing_snapshot</feature>
+        <feature>remove_item_from_context(context, line_id) → mark removed, recalculate</feature>
+        <feature>update_item_quantity(context, line_id, new_qty) → recalculate line and pricing</feature>
+        <feature>apply_discount_to_item(context, line_id, discount_data) → update item and pricing</feature>
+        <feature>apply_order_level_discount(context, discount_data)</feature>
+        <feature>add_voice_context(context, transcription, duration, confidence, confirmed)</feature>
+        <feature>set_delivery(context, address, zone_id, charges)</feature>
+        <feature>mark_bill_shown(context) → increment bill_shown_count, set bill_shown_at</feature>
+        <feature>mark_confirmed(context) → set confirmation_requested_at</feature>
+        <feature>cancel_order(context, reason) → set order_cancelled and reason</feature>
+        <feature>get_context_from_session(session) → deserialize pending_order_draft to OrderContext model</feature>
+        <feature>save_context_to_session(context, session_repo, session_id) → serialize and persist</feature>
+        <feature>validate_context(context) → check all required fields present, quantities positive, prices consistent</feature>
+        <feature>generate_ai_summary(context, ai_provider) → summarize for long orders to save tokens</feature>
+        <feature>to_order_create_payload(context) → dict ready to insert into orders + order_items tables</feature>
+        <feature>context_to_display_string(context, language) → human-readable bill in customer's language</feature>
+      </features>
+    </module>
+
+  </modules_and_features>
+
+  <!-- ══════════════════════════════════════════════════════════
+       IMPLEMENTATION PHASES — STRICT EXECUTION ORDER
+  ══════════════════════════════════════════════════════════ -->
+  <implementation_phases>
+
+    <phase id="P1" name="Foundation, Infrastructure, and Git Setup">
+      <steps>
+        <step>git init — first command executed</step>
+        <step>Create .gitignore — second command — commit immediately: "Initial commit: add .gitignore for Python/FastAPI project"</step>
+        <step>Create .env.example with ALL variables — commit: "config: add .env.example with complete variable documentation"</step>
+        <step>Create README.md skeleton — commit: "docs: add README skeleton with project overview and quickstart"</step>
+        <step>Create pyproject.toml + requirements.txt + requirements-dev.txt — commit: "build: add Python project metadata and pinned dependencies"</step>
+        <step>Create .pre-commit-config.yaml (black, isort, flake8) — commit: "ci: add pre-commit hooks for code quality enforcement"</step>
+        <step>Create complete folder structure with all __init__.py files — commit: "project: scaffold complete industry-standard folder structure"</step>
+        <step>Implement app/core/config.py — commit: "core: implement Pydantic Settings with all env vars typed and validated"</step>
+        <step>Implement app/core/logging.py — commit: "core: implement loguru structured logging with PII masking filter"</step>
+        <step>Implement app/core/exceptions.py — commit: "core: define complete custom exception hierarchy"</step>
+        <step>Implement app/core/constants.py — commit: "core: define all enums, state names, limits, and timeouts"</step>
+        <step>Implement app/core/security.py — commit: "security: add HMAC verification, Fernet encryption, and token utilities"</step>
+        <step>Implement app/db/client.py — commit: "db: implement Supabase client singleton with connection validation"</step>
+        <step>Write all 27 migration SQL files — commit groups of related migrations: "db: migrations 001-007 core tables (plans, distributors, customers, catalog, rules, zones)"</step>
+        <step>Apply migrations to Supabase — verify all tables exist — commit: "db: apply all 27 migrations, verify schema in Supabase"</step>
+        <step>Implement all Pydantic DB models including order_context.py — commit: "db: add Pydantic models for all 15 database entities"</step>
+        <step>Implement all 15 repository files — commit per repository or group: "db: add repository layer for [domain] with full CRUD and query methods"</step>
+        <step>Implement app/main.py — commit: "app: implement FastAPI factory with lifespan, middleware, and router registration"</step>
+        <step>Implement app/api/health.py — commit: "api: add /health endpoint checking all system dependencies"</step>
+        <step>Verify server starts, /health returns 200 — PHASE 1 COMPLETE COMMIT: "phase-1: foundation and infrastructure complete, health check passing"</step>
+      </steps>
+    </phase>
+
+    <phase id="P2" name="WhatsApp API Integration">
+      <steps>
+        <step>Implement app/whatsapp/message_types.py — commit: "whatsapp: add message payload builders for all Meta API message types"</step>
+        <step>Implement app/whatsapp/client.py — commit: "whatsapp: implement async Meta Cloud API client with retry and rate limit tracking"</step>
+        <step>Implement app/whatsapp/parser.py — commit: "whatsapp: add webhook payload parser for all incoming message types"</step>
+        <step>Implement app/whatsapp/media.py — commit: "whatsapp: add media download and Supabase Storage upload handlers"</step>
+        <step>Implement app/api/webhook.py — commit: "api: add Meta webhook handler with HMAC verification and message routing"</step>
+        <step>Implement app/channels/router.py — commit: "channels: implement message router with distributor resolution and channel dispatch"</step>
+        <step>Implement app/notifications/ — commit: "notifications: add WhatsApp notifier and all three language template files"</step>
+        <step>Implement app/notifications/whatsapp_notifier.py — commit: "notifications: implement send wrapper with logging, retry, and delivery tracking"</step>
+        <step>Test webhook verification with Meta console — test real message receive and reply — commit: "test: verify end-to-end webhook receive and text reply working"</step>
+        <step>Write unit tests for parser.py and message_types.py — commit: "tests: add unit tests for webhook parser and message type builders"</step>
+        <step>PHASE 2 COMPLETE COMMIT: "phase-2: WhatsApp API integration complete, verified end-to-end"</step>
+      </steps>
+    </phase>
+
+    <phase id="P3" name="AI Engine — Multi-Provider">
+      <steps>
+        <step>Implement app/ai/base.py — commit: "ai: define abstract AIProvider base class with full interface contract"</step>
+        <step>Implement app/ai/providers/gemini_provider.py — commit: "ai: implement Gemini provider for text and native audio transcription"</step>
+        <step>Implement app/ai/providers/openai_provider.py — commit: "ai: implement OpenAI provider with GPT text and Whisper STT"</step>
+        <step>Implement app/ai/providers/anthropic_provider.py — commit: "ai: implement Anthropic Claude provider with Whisper STT fallback"</step>
+        <step>Implement app/ai/providers/cohere_provider.py — commit: "ai: implement Cohere provider with Whisper STT fallback"</step>
+        <step>Implement app/ai/providers/openrouter_provider.py — commit: "ai: implement OpenRouter proxy provider via OpenAI-compatible API"</step>
+        <step>Implement app/ai/factory.py with fallback chain — commit: "ai: implement provider factory with env-driven selection and fallback chain"</step>
+        <step>Implement all prompts in app/ai/prompts/ — commit: "ai: add all system prompts for Channel A, Channel B, and shared utilities"</step>
+        <step>Implement app/ai/nlu.py — commit: "ai: implement NLU with intent classification, entity extraction, and Roman Urdu normalization"</step>
+        <step>Implement app/ai/voice.py — commit: "ai: implement voice pipeline with ogg download, conversion, and multi-provider STT"</step>
+        <step>Implement app/ai/response_generator.py — commit: "ai: implement multi-language response generation with provider abstraction"</step>
+        <step>Test NLU with 20+ sample messages across all languages — commit: "tests: add unit tests for NLU with mocked AI provider responses"</step>
+        <step>Test voice pipeline end-to-end with Gemini and OpenAI Whisper — commit: "tests: verify voice pipeline works with both STT providers"</step>
+        <step>PHASE 3 COMPLETE COMMIT: "phase-3: AI engine complete with 5 providers, NLU, voice pipeline tested"</step>
+      </steps>
+    </phase>
+
+    <phase id="P4" name="Order Context and Session Management">
+      <steps>
+        <step>Implement app/db/models/order_context.py — Pydantic model exact to spec — commit: "db: add OrderContext Pydantic model matching full order context schema"</step>
+        <step>Implement app/orders/context_manager.py — all 16 functions — commit: "orders: implement complete order context manager with all CRUD operations"</step>
+        <step>Implement app/channels/channel_a/state_machine.py — all states — commit: "channels: implement Channel A FSM with all states and transition validation"</step>
+        <step>Implement app/channels/channel_b/state_machine.py — commit: "channels: implement Channel B FSM for sales qualification and onboarding"</step>
+        <step>Implement session expiry logic — commit: "sessions: add expiry warning at 50min and auto-expire at 60min with notification"</step>
+        <step>Implement interrupt handling (cancel/menu from any state) — commit: "sessions: add universal interrupt handling for cancel and main-menu commands"</step>
+        <step>Test process restart mid-order — verify session resumes correctly — commit: "tests: verify order context survives process restart via session persistence"</step>
+        <step>Write unit tests for both FSMs and order context manager — commit: "tests: add comprehensive state machine and order context unit tests"</step>
+        <step>PHASE 4 COMPLETE COMMIT: "phase-4: order context persistence and session FSMs complete, restart-safe"</step>
+      </steps>
+    </phase>
+
+    <phase id="P5" name="Channel A — All Customer Flows">
+      <steps>
+        <step>Implement app/inventory/fuzzy_matcher.py — commit: "inventory: implement RapidFuzz medicine matching with multi-field scoring and ranking"</step>
+        <step>Implement app/inventory/catalog_service.py — commit: "inventory: implement catalog CRUD, cache management, and category operations"</step>
+        <step>Implement app/channels/channel_a/onboarding.py — commit: "channel-a: implement full customer registration flow with validation and voice support"</step>
+        <step>Implement app/orders/billing_service.py — commit: "orders: implement billing with discount rules, bonus units, and delivery charges"</step>
+        <step>Implement app/orders/context_manager.py integration with billing — commit: "orders: integrate billing service with order context manager"</step>
+        <step>Implement app/channels/channel_a/order_flow.py — commit: "channel-a: implement complete order flow from item collection to confirmation"</step>
+        <step>Implement app/orders/order_service.py — commit: "orders: implement order CRUD with status management and history tracking"</step>
+        <step>Implement app/channels/channel_a/catalog_flow.py — commit: "channel-a: implement catalog browse, search, pagination, and document send"</step>
+        <step>Implement app/channels/channel_a/complaint_flow.py — commit: "channel-a: implement complaint submission with categories, photos, and ticket generation"</step>
+        <step>Implement app/channels/channel_a/profile_flow.py — commit: "channel-a: implement profile view and field-level edit flows"</step>
+        <step>Implement app/channels/channel_a/inquiry_flow.py — commit: "channel-a: implement inquiry handler for medicine questions, order status, and help"</step>
+        <step>Implement app/channels/channel_a/handler.py — commit: "channel-a: implement main handler dispatching to all flows based on state and intent"</step>
+        <step>Implement business hours, credit check, handoff flows — commit: "channel-a: add business hours enforcement, credit limit check, and human handoff"</step>
+        <step>Test all Channel A flows end-to-end — commit: "tests: integration tests for all Channel A conversation flows"</step>
+        <step>PHASE 5 COMPLETE COMMIT: "phase-5: all Channel A customer flows complete and integration tested"</step>
+      </steps>
+    </phase>
+
+    <phase id="P6" name="Order Logging and Document Generation">
+      <steps>
+        <step>Implement app/orders/logging_service.py — commit: "orders: implement order logging to WhatsApp group and Excel file"</step>
+        <step>Implement app/reporting/excel_generator.py — commit: "reporting: implement monthly Excel order log with all columns via openpyxl"</step>
+        <step>Implement app/reporting/pdf_generator.py — commit: "reporting: implement catalog PDF and order receipt generation via ReportLab"</step>
+        <step>Test WhatsApp group logging, Excel append, PDF generation — commit: "tests: verify order logging pipeline end-to-end"</step>
+        <step>PHASE 6 COMPLETE COMMIT: "phase-6: order logging and document generation complete"</step>
+      </steps>
+    </phase>
+
+    <phase id="P7" name="Inventory Sync">
+      <steps>
+        <step>Implement app/inventory/sync_service.py — commit: "inventory: implement Excel/CSV sync with validation, upsert, and error logging"</step>
+        <step>Implement app/inventory/stock_service.py — commit: "inventory: add stock level checks, is_in_stock updates, and low-stock detection"</step>
+        <step>Implement APScheduler inventory sync job — commit: "scheduler: add inventory sync job with per-distributor interval configuration"</step>
+        <step>Test full sync cycle — commit: "tests: verify inventory sync pipeline from upload to DB update to alert"</step>
+        <step>PHASE 7 COMPLETE COMMIT: "phase-7: inventory sync automation complete and tested"</step>
+      </steps>
+    </phase>
+
+    <phase id="P8" name="Payment Gateways — All Five">
+      <steps>
+        <step>Implement app/payments/base.py — commit: "payments: define abstract PaymentGateway base class with full interface"</step>
+        <step>Implement app/payments/gateways/dummy_gateway.py — commit: "payments: implement dummy gateway with full lifecycle simulation"</step>
+        <step>Implement app/payments/gateways/jazzcash.py — commit: "payments: implement JazzCash merchant API with HMAC verification"</step>
+        <step>Implement app/payments/gateways/easypaisa.py — commit: "payments: implement EasyPaisa business API with hash verification"</step>
+        <step>Implement app/payments/gateways/safepay.py — commit: "payments: implement SafePay checkout API with HMAC webhook verification"</step>
+        <step>Implement app/payments/gateways/nayapay.py — commit: "payments: implement NayaPay merchant API with QR code URL support"</step>
+        <step>Implement app/payments/gateways/bank_transfer.py — commit: "payments: implement bank transfer flow with screenshot capture and manual confirmation"</step>
+        <step>Implement app/payments/factory.py — commit: "payments: implement gateway factory with env-driven selection and per-distributor override"</step>
+        <step>Implement app/payments/webhook_handlers.py — commit: "payments: implement unified post-payment lifecycle with idempotency guarantees"</step>
+        <step>Implement app/api/payments.py — all callback endpoints — commit: "api: add callback endpoints for all 5 payment gateways with signature verification"</step>
+        <step>Test dummy gateway full lifecycle — test failure simulation — commit: "tests: verify dummy gateway complete payment lifecycle including failure scenarios"</step>
+        <step>Write unit tests for all gateways — commit: "tests: add unit tests for all 5 payment gateways with mocked responses"</step>
+        <step>PHASE 8 COMPLETE COMMIT: "phase-8: all 5 payment gateways implemented and tested"</step>
+      </steps>
+    </phase>
+
+    <phase id="P9" name="Distributor Management System">
+      <steps>
+        <step>Implement subscription_manager.py — commit: "distributor-mgmt: implement subscription lifecycle FSM with grace period handling"</step>
+        <step>Implement reminder_service.py — commit: "distributor-mgmt: implement payment reminder generation with deduplication via idempotency keys"</step>
+        <step>Implement notification_service.py — commit: "distributor-mgmt: implement batch notification system for updates and announcements"</step>
+        <step>Implement onboarding_service.py — commit: "distributor-mgmt: implement multi-step onboarding sequence from payment to go-live"</step>
+        <step>Implement support_service.py — commit: "distributor-mgmt: implement support ticket system with owner notification and resolution flow"</step>
+        <step>Implement all scheduler reminder and cleanup jobs — commit: "scheduler: add reminder, cleanup, and health check jobs"</step>
+        <step>Test reminder sequence and suspension flow — commit: "tests: integration tests for subscription reminder sequence and suspension lifecycle"</step>
+        <step>PHASE 9 COMPLETE COMMIT: "phase-9: automated distributor management complete and tested"</step>
+      </steps>
+    </phase>
+
+    <phase id="P10" name="Channel B — Sales Bot">
+      <steps>
+        <step>Implement app/channels/channel_b/service_registry.py — commit: "channel-b: implement dynamic service registry from DB with handler routing"</step>
+        <step>Implement app/channels/channel_b/sales_flow.py — commit: "channel-b: implement full prospect qualification through demo booking and payment"</step>
+        <step>Implement app/channels/channel_b/onboarding_flow.py — commit: "channel-b: implement post-payment distributor onboarding automation"</step>
+        <step>Implement app/channels/channel_b/handler.py — commit: "channel-b: implement sales channel handler with owner command processing"</step>
+        <step>Seed service_registry with Teletraan entry — commit: "db: seed service_registry with Teletraan service entry"</step>
+        <step>Test full Channel B flow — commit: "tests: integration test Channel B from first message to distributor creation"</step>
+        <step>PHASE 10 COMPLETE COMMIT: "phase-10: Channel B sales bot complete and integration tested"</step>
+      </steps>
+    </phase>
+
+    <phase id="P11" name="Analytics, Reports, and All Scheduler Jobs">
+      <steps>
+        <step>Implement all analytics services — commit: "analytics: implement order, customer, distributor, and system analytics services"</step>
+        <step>Implement report generators and email delivery — commit: "reporting: implement daily/weekly/monthly report generation and email dispatch"</step>
+        <step>Implement all scheduler jobs (report, sync, cleanup, health) — commit: "scheduler: complete all job definitions with error handling and failure alerting"</step>
+        <step>Test all scheduler jobs manually — commit: "tests: verify all scheduler jobs execute correctly and handle failures"</step>
+        <step>PHASE 11 COMPLETE COMMIT: "phase-11: analytics, reporting, and scheduler jobs complete"</step>
+      </steps>
+    </phase>
+
+    <phase id="P12" name="Security, Rate Limiting, Admin API">
+      <steps>
+        <step>Integrate rate limiting into message router — commit: "security: integrate per-number rate limiting in message router"</step>
+        <step>Implement admin API endpoints — commit: "api: implement protected admin API with full distributor and system management endpoints"</step>
+        <step>Verify CNIC encryption on all writes — commit: "security: verify Fernet encryption applied on all CNIC writes and reads"</step>
+        <step>Security audit pass: check all endpoints, all inputs, all logs — commit: "security: complete security audit pass, all PII masked, all inputs validated"</step>
+        <step>Write security unit tests — commit: "tests: add security tests for HMAC rejection, rate limiting, input validation"</step>
+        <step>PHASE 12 COMPLETE COMMIT: "phase-12: security hardening, rate limiting, and admin API complete"</step>
+      </steps>
+    </phase>
+
+    <phase id="P13" name="Testing, Documentation, Deployment">
+      <steps>
+        <step>Complete all remaining unit and integration tests to reach 80% coverage — commit: "tests: complete test suite, 80%+ coverage on core modules"</step>
+        <step>Write all docs/ files — commit: "docs: add architecture, schema, deployment, payment gateways, AI providers, flows guides"</step>
+        <step>Write scripts/ utility files — commit: "scripts: add migrations runner, catalog seeder, distributor creator, webhook tester"</step>
+        <step>Create render.yaml and Procfile — commit: "deploy: add Render and Railway deployment configurations"</step>
+        <step>Deploy to Render — verify health + webhook — commit: "deploy: production deployment on Render verified and live"</step>
+        <step>Full end-to-end smoke test on production — commit: "test: production smoke test passed — all flows verified on live deployment"</step>
+        <step>FINAL COMMIT: "teletraan: v1.0.0 complete — production-ready, all features implemented, all tests passing"</step>
+      </steps>
+    </phase>
+
+  </implementation_phases>
+
+  <!-- ══════════════════════════════════════════════════════════
+       FINAL VERIFICATION CHECKLIST
+  ══════════════════════════════════════════════════════════ -->
+  <final_verification_checklist>
+    <check>Zero TODOs, FIXMEs, stubs in any Python file</check>
+    <check>All 27 SQL migrations applied and verified in Supabase</check>
+    <check>git log shows frequent, well-named commits in Linus style — all ending with Signed-off-by: Abdullah-Khan-Niazi</check>
+    <check>ACTIVE_AI_PROVIDER can be switched to any of 5 providers via env — verified with tests</check>
+    <check>ACTIVE_PAYMENT_GATEWAY can be switched to any of 5 gateways via env — verified with tests</check>
+    <check>Order context fully persists in sessions.pending_order_draft — process restart mid-order recovers seamlessly</check>
+    <check>All order context fields per spec are stored and retrievable</check>
+    <check>All 5 payment gateways implemented: jazzcash, easypaisa, safepay, nayapay, bank_transfer + dummy</check>
+    <check>All 5 AI providers implemented: gemini, openai, anthropic, cohere, openrouter</check>
+    <check>SafePay checkout URL generation and HMAC webhook verified</check>
+    <check>NayaPay payment initiation and webhook verified</check>
+    <check>Bank transfer flow: screenshot received, owner notified, manual confirm triggers extension</check>
+    <check>Dummy gateway auto-confirms after delay, fails on 99-paisa amounts, blocks in production</check>
+    <check>All Channel A flows tested: onboarding, order, voice, complaint, profile, language switch, quick reorder, credit check</check>
+    <check>Session survives process restart — conversation resumes from exact state</check>
+    <check>Reminder sequence fires at 7d, 3d, 1d, expiry — no duplicates (idempotency keys)</check>
+    <check>Channel B: prospect to payment to distributor created to onboarding sequence</check>
+    <check>All scheduler jobs registered, executing, and error-handling correctly</check>
+    <check>Rate limiter blocks and sends single warning — no further processing</check>
+    <check>Admin API X-Admin-Key protected — unauthorized requests rejected</check>
+    <check>CNIC encrypted before DB write — decrypted on read</check>
+    <check>Phone numbers last-4-only in all logs</check>
+    <check>pytest 80%+ coverage on core modules</check>
+    <check>All docs/ files complete and accurate</check>
+    <check>Render deployment live, health check green, all scheduler jobs active</check>
+    <check>No hardcoded secrets anywhere in codebase</check>
+    <check>Pre-commit hooks pass on all files (black, isort, flake8)</check>
+  </final_verification_checklist>
+
+</teletraan_build_prompt>

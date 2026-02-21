@@ -1,0 +1,38 @@
+{
+  "recommendations": [
+    // Python
+    "ms-python.python",
+    "ms-python.black-formatter",
+    "ms-python.isort",
+    "ms-python.flake8",
+    "ms-python.vscode-pylance",
+
+    // GitHub Copilot
+    "github.copilot",
+    "github.copilot-chat",
+
+    // FastAPI / Web
+    "ms-python.debugpy",
+    "humao.rest-client",
+
+    // Database
+    "mtxr.sqltools",
+
+    // Git
+    "mhutchie.git-graph",
+    "eamodio.gitlens",
+
+    // Env files
+    "mikestead.dotenv",
+
+    // Markdown
+    "yzhang.markdown-all-in-one",
+    "DavidAnson.vscode-markdownlint",
+
+    // Docker (for local Supabase)
+    "ms-azuretools.vscode-docker",
+
+    // TOML (pyproject.toml)
+    "tamasfe.even-better-toml"
+  ]
+}
