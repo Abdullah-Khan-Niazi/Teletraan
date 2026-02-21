@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "teletraan"
+version = "2.0.0"
+description = "WhatsApp Intelligent Order and Operations Automation System for medicine distributors in Pakistan"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "Proprietary"}
+authors = [{name = "Abdullah-Khan-Niazi"}]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--strict-markers -v --tb=short"
+markers = [
+    "unit: unit tests",
+    "integration: integration tests requiring DB",
+    "slow: tests that take more than 5 seconds",
+]
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["tests/*", "migrations/*", "scripts/*"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.",
+]
