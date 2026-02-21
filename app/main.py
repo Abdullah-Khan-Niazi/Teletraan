@@ -153,14 +153,14 @@ def _register_routers(application: FastAPI) -> None:
     appended to this function.
     """
     from app.api.health import router as health_router
+    from app.api.webhook import router as webhook_router
 
     application.include_router(health_router)
+    application.include_router(webhook_router)
 
     # Future routers (added in later phases):
-    # from app.api.webhook import router as webhook_router
     # from app.api.admin import router as admin_router
     # from app.api.payments import router as payments_router
-    # application.include_router(webhook_router)
     # application.include_router(admin_router)
     # application.include_router(payments_router)
 
