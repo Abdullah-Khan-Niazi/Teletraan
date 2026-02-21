@@ -1,0 +1,1 @@
+"""TELETRAAN notification templates package."""

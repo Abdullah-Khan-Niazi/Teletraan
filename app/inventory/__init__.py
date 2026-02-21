@@ -1,0 +1,1 @@
+"""TELETRAAN inventory management package."""
