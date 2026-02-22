@@ -471,6 +471,9 @@ async def disambiguate_item(
 def _extract_json(text: str) -> str | None:
     """Extract JSON from text that may contain markdown or extra content.
 
+    Handles nested braces so JSON with arrays-of-objects (e.g. NLU
+    responses with ``items``) is extracted correctly.
+
     Args:
         text: Raw AI response that should contain JSON.
 
@@ -478,14 +481,28 @@ def _extract_json(text: str) -> str | None:
         Extracted JSON string, or None.
     """
     # Try to find JSON in code blocks
-    match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
+    match = re.search(r"```(?:json)?\s*(\{.+?\})\s*```", text, re.DOTALL)
     if match:
-        return match.group(1)
+        candidate = match.group(1)
+        try:
+            json.loads(candidate)
+            return candidate
+        except (json.JSONDecodeError, TypeError):
+            pass
 
-    # Try to find bare JSON
-    match = re.search(r"\{[^{}]*\}", text, re.DOTALL)
-    if match:
-        return match.group(0)
+    # Brace-depth scan — find the outermost { … } pair
+    start = text.find("{")
+    if start == -1:
+        return None
+
+    depth = 0
+    for i in range(start, len(text)):
+        if text[i] == "{":
+            depth += 1
+        elif text[i] == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start : i + 1]
 
     return None
 
