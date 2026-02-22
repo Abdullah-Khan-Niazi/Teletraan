@@ -186,7 +186,7 @@ class BillingService:
                 continue
 
             # Check minimum quantity requirement
-            if rule.minimum_order_quantity and item.quantity < rule.minimum_order_quantity:
+            if rule.minimum_order_quantity and item.quantity_requested < rule.minimum_order_quantity:
                 continue
 
             discount_paisas = 0
@@ -194,7 +194,7 @@ class BillingService:
 
             if rule.rule_type == DiscountRuleType.BONUS_UNITS.value:
                 bonus = _calculate_bonus_units(
-                    item.quantity,
+                    item.quantity_requested,
                     rule.buy_quantity or 0,
                     rule.get_quantity or 0,
                 )
@@ -208,7 +208,7 @@ class BillingService:
 
             elif rule.rule_type == DiscountRuleType.PERCENTAGE_DISCOUNT.value:
                 if rule.discount_percentage:
-                    line_value = item.price_per_unit_paisas * item.quantity
+                    line_value = item.price_per_unit_paisas * item.quantity_requested
                     discount_paisas = int(
                         line_value * rule.discount_percentage / 100
                     )
@@ -440,7 +440,7 @@ class BillingService:
 
         for i, item in enumerate(active_items, 1):
             name = item.medicine_name
-            qty = item.quantity
+            qty = item.quantity_requested
             unit = item.unit or "unit"
             price_rs = item.price_per_unit_paisas / 100
             line_rs = item.line_total_paisas / 100
@@ -529,7 +529,7 @@ def _recalculate_line_totals(item: OrderItemDraft) -> None:
     Args:
         item: The order item draft to recalculate.
     """
-    item.line_subtotal_paisas = item.price_per_unit_paisas * item.quantity
+    item.line_subtotal_paisas = item.price_per_unit_paisas * item.quantity_requested
     item.line_total_paisas = max(
         0,
         item.line_subtotal_paisas - item.discount_applied_paisas,
