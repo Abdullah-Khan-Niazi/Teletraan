@@ -831,7 +831,60 @@ def context_to_display_string(
 
 
 # ═══════════════════════════════════════════════════════════════════
-# INTERNAL: PRICING RECALCULATION
+# BILLING SERVICE INTEGRATION
+# ═══════════════════════════════════════════════════════════════════
+
+
+async def recalculate_with_billing(
+    context: OrderContext,
+    distributor_id: str,
+    *,
+    customer_tags: list[str] | None = None,
+    delivery_zone_id: str | None = None,
+) -> OrderContext:
+    """Full recalculation via BillingService with discount rules.
+
+    Unlike the fast synchronous ``_recalculate_pricing_snapshot``
+    (which just sums existing item totals), this function fetches
+    active discount rules from the database, applies them in
+    priority order, calculates bonus units, and computes delivery
+    charges from the zone.
+
+    Call this when you need rule-based pricing — typically at bill
+    preview, before confirmation, or after the customer finishes
+    adding items.  Item add/remove/update still use the fast
+    sync recalc internally.
+
+    Args:
+        context: The order context to recalculate.
+        distributor_id: Tenant scope for rule lookup.
+        customer_tags: Customer tags for targeted discounts.
+        delivery_zone_id: Zone UUID for delivery charges.
+
+    Returns:
+        The same OrderContext with updated pricing_snapshot.
+    """
+    from app.orders.billing_service import BillingService
+
+    billing = BillingService()
+    context = await billing.calculate_bill(
+        context,
+        distributor_id,
+        customer_tags=customer_tags,
+        delivery_zone_id=delivery_zone_id,
+    )
+    context.last_modified_at = datetime.now().astimezone()
+
+    logger.info(
+        "context.billing_recalculated",
+        total=context.pricing_snapshot.total_paisas,
+        auto_discounts=len(context.pricing_snapshot.auto_applied_discounts),
+    )
+    return context
+
+
+# ═══════════════════════════════════════════════════════════════════
+# INTERNAL: PRICING RECALCULATION (FAST/SYNC)
 # ═══════════════════════════════════════════════════════════════════
 
 
