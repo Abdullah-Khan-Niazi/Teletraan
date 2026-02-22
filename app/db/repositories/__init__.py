@@ -10,6 +10,8 @@ from app.db.repositories.analytics_repo import AnalyticsRepository
 from app.db.repositories.audit_repo import AuditRepository
 from app.db.repositories.catalog_repo import CatalogRepository
 from app.db.repositories.complaint_repo import ComplaintRepository
+from app.db.repositories.delivery_zone_repo import DeliveryZoneRepository
+from app.db.repositories.discount_rule_repo import DiscountRuleRepository
 from app.db.repositories.customer_repo import CustomerRepository
 from app.db.repositories.distributor_repo import DistributorRepository
 from app.db.repositories.notification_repo import NotificationRepository
@@ -32,6 +34,8 @@ customer_repo = CustomerRepository()
 order_repo = OrderRepository()
 order_item_repo = OrderItemRepository()
 catalog_repo = CatalogRepository()
+delivery_zone_repo = DeliveryZoneRepository()
+discount_rule_repo = DiscountRuleRepository()
 
 # Group 2 — sessions, payments, complaints, support, prospects
 session_repo = SessionRepository()
@@ -53,6 +57,8 @@ __all__ = [
     "AuditRepository",
     "CatalogRepository",
     "ComplaintRepository",
+    "DeliveryZoneRepository",
+    "DiscountRuleRepository",
     "CustomerRepository",
     "DistributorRepository",
     "NotificationRepository",
@@ -69,6 +75,8 @@ __all__ = [
     "audit_repo",
     "catalog_repo",
     "complaint_repo",
+    "delivery_zone_repo",
+    "discount_rule_repo",
     "customer_repo",
     "distributor_repo",
     "notification_repo",

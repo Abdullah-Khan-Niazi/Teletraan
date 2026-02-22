@@ -31,6 +31,8 @@ from app.db.models.audit import (
 )
 from app.db.models.catalog import CatalogItem, CatalogItemCreate, CatalogItemUpdate
 from app.db.models.complaint import Complaint, ComplaintCreate, ComplaintUpdate
+from app.db.models.delivery_zone import DeliveryZone, DeliveryZoneCreate
+from app.db.models.discount_rule import DiscountRule, DiscountRuleCreate
 from app.db.models.customer import Customer, CustomerCreate, CustomerUpdate
 from app.db.models.distributor import Distributor, DistributorCreate, DistributorUpdate
 from app.db.models.order import (
@@ -64,6 +66,12 @@ __all__ = [
     "CatalogItem",
     "CatalogItemCreate",
     "CatalogItemUpdate",
+    # Delivery Zone
+    "DeliveryZone",
+    "DeliveryZoneCreate",
+    # Discount Rule
+    "DiscountRule",
+    "DiscountRuleCreate",
     # Session
     "Session",
     "SessionCreate",
