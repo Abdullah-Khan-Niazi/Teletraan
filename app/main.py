@@ -24,6 +24,7 @@ from app.core.config import get_settings
 from app.core.exceptions import TeletraanBaseException
 from app.core.logging import configure_logging
 from app.db.client import close_client, init_client
+from app.scheduler.setup import create_scheduler
 
 
 # ── Lifespan ────────────────────────────────────────────────────────
@@ -36,11 +37,13 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
     Startup:
         1. Configure structured logging.
         2. Initialise Supabase async client.
-        3. Log readiness.
+        3. Start APScheduler.
+        4. Log readiness.
 
     Shutdown:
-        1. Close Supabase client.
-        2. Log clean shutdown.
+        1. Stop APScheduler.
+        2. Close Supabase client.
+        3. Log clean shutdown.
     """
     settings = get_settings()
     configure_logging(settings)
@@ -54,7 +57,17 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
     await init_client()
     logger.info("app.db_connected")
 
+    scheduler = create_scheduler()
+    scheduler.start()
+    logger.info(
+        "app.scheduler_started",
+        job_count=len(scheduler.get_jobs()),
+    )
+
     yield
+
+    scheduler.shutdown(wait=True)
+    logger.info("app.scheduler_stopped")
 
     await close_client()
     logger.info("app.shutdown_complete")
