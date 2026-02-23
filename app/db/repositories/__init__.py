@@ -23,6 +23,7 @@ from app.db.repositories.rate_limit_repo import RateLimitRepository
 from app.db.repositories.scheduled_message_repo import ScheduledMessageRepository
 from app.db.repositories.session_repo import SessionRepository
 from app.db.repositories.support_ticket_repo import SupportTicketRepository
+from app.db.repositories.sync_log_repo import InventorySyncLogRepository
 
 # ── Singleton instances ─────────────────────────────────────────────
 # Services and handlers import these directly rather than instantiating
@@ -50,6 +51,7 @@ audit_repo = AuditRepository()
 notification_repo = NotificationRepository()
 scheduled_message_repo = ScheduledMessageRepository()
 rate_limit_repo = RateLimitRepository()
+sync_log_repo = InventorySyncLogRepository()
 
 __all__ = [
     # Repository classes
@@ -70,6 +72,7 @@ __all__ = [
     "ScheduledMessageRepository",
     "SessionRepository",
     "SupportTicketRepository",
+    "InventorySyncLogRepository",
     # Singleton instances
     "analytics_repo",
     "audit_repo",
@@ -88,4 +91,5 @@ __all__ = [
     "scheduled_message_repo",
     "session_repo",
     "support_ticket_repo",
+    "sync_log_repo",
 ]

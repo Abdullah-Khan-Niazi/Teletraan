@@ -541,6 +541,93 @@ class CatalogRepository:
                 operation="soft_delete",
             ) from exc
 
+    async def upsert_by_sku_or_name(
+        self,
+        distributor_id: str,
+        data: CatalogItemCreate,
+    ) -> tuple[CatalogItem, bool]:
+        """Insert or update a catalog item matched by SKU or medicine_name.
+
+        Match priority: SKU (exact) → medicine_name (exact, case-insensitive).
+        If a match is found the row is updated with any non-None fields from
+        ``data``; otherwise a new row is inserted.
+
+        Args:
+            distributor_id: Tenant scope.
+            data: Validated creation payload (distributor_id must match).
+
+        Returns:
+            Tuple of (CatalogItem, was_inserted).  ``was_inserted`` is True
+            when a brand-new row was created, False when an existing row
+            was updated.
+
+        Raises:
+            DatabaseError: On query / insert / update failure.
+        """
+        try:
+            existing: Optional[CatalogItem] = None
+
+            # Priority 1 — match by SKU (fastest, most reliable)
+            if data.sku:
+                existing = await self.get_by_sku(distributor_id, data.sku)
+
+            # Priority 2 — match by medicine_name (case-insensitive)
+            if existing is None:
+                client = get_db_client()
+                result = (
+                    await client.table(self.TABLE)
+                    .select("*")
+                    .eq("distributor_id", distributor_id)
+                    .ilike("medicine_name", data.medicine_name)
+                    .eq("is_deleted", False)
+                    .limit(1)
+                    .maybe_single()
+                    .execute()
+                )
+                if result.data:
+                    existing = CatalogItem.model_validate(result.data)
+
+            if existing is not None:
+                # Build update payload from creation data
+                update_fields = data.model_dump(exclude_none=True, mode="json")
+                update_fields.pop("distributor_id", None)
+                update_payload = CatalogItemUpdate.model_validate(update_fields)
+                updated = await self.update(
+                    str(existing.id),
+                    update_payload,
+                    distributor_id=distributor_id,
+                )
+                logger.info(
+                    "db.catalog_upserted",
+                    action="updated",
+                    item_id=str(existing.id),
+                    medicine_name=data.medicine_name,
+                )
+                return updated, False
+
+            # No match — insert new row
+            created = await self.create(data)
+            logger.info(
+                "db.catalog_upserted",
+                action="inserted",
+                medicine_name=data.medicine_name,
+            )
+            return created, True
+
+        except (NotFoundError, DatabaseError):
+            raise
+        except Exception as exc:
+            logger.error(
+                "db.upsert_failed",
+                table=self.TABLE,
+                operation="upsert_by_sku_or_name",
+                error=str(exc),
+            )
+            raise DatabaseError(
+                f"Failed to upsert {self.TABLE}: {exc}",
+                operation="upsert_by_sku_or_name",
+            ) from exc
+
     async def get_low_stock_items(
         self, distributor_id: str
     ) -> list[CatalogItem]:
