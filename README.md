@@ -1,6 +1,6 @@
 # TELETRAAN
 
-**Aapka Distributor, Hamara Kaam**
+**;)**
 
 WhatsApp Intelligent Order and Operations Automation System for medicine
 distributors in Pakistan. Built on Meta Cloud API, Python (FastAPI), and
@@ -31,17 +31,17 @@ Supabase.
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Runtime | Python 3.11+ |
-| Framework | FastAPI (fully async) |
-| Database | Supabase (PostgreSQL) |
+| Layer        | Technology                                                |
+| ------------ | --------------------------------------------------------- |
+| Runtime      | Python 3.11+                                              |
+| Framework    | FastAPI (fully async)                                     |
+| Database     | Supabase (PostgreSQL)                                     |
 | AI Providers | Gemini 1.5 Flash, GPT-4o-mini, Claude, Cohere, OpenRouter |
-| Payments | JazzCash, EasyPaisa, SafePay, NayaPay, Bank Transfer |
-| WhatsApp | Meta Cloud API v19.0 |
-| Scheduler | APScheduler |
-| Logging | Loguru (structured, PII-masked) |
-| Deploy | Render / Railway |
+| Payments     | JazzCash, EasyPaisa, SafePay, NayaPay, Bank Transfer      |
+| WhatsApp     | Meta Cloud API v19.0                                      |
+| Scheduler    | APScheduler                                               |
+| Logging      | Loguru (structured, PII-masked)                           |
+| Deploy       | Render / Railway                                          |
 
 ---
 
@@ -108,13 +108,13 @@ See [`.env.example`](.env.example) for the complete list with descriptions.
 
 ## API Endpoints
 
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/health` | System health check |
-| `GET` | `/api/webhook` | Meta webhook verification |
-| `POST` | `/api/webhook` | Meta webhook incoming messages |
-| `POST` | `/api/payments/{gateway}/callback` | Payment gateway callbacks |
-| `GET/POST` | `/api/admin/*` | Admin API (X-Admin-Key protected) |
+| Method     | Path                               | Description                       |
+| ---------- | ---------------------------------- | --------------------------------- |
+| `GET`      | `/health`                          | System health check               |
+| `GET`      | `/api/webhook`                     | Meta webhook verification         |
+| `POST`     | `/api/webhook`                     | Meta webhook incoming messages    |
+| `POST`     | `/api/payments/{gateway}/callback` | Payment gateway callbacks         |
+| `GET/POST` | `/api/admin/*`                     | Admin API (X-Admin-Key protected) |
 
 ---
 
