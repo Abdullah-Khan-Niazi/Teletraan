@@ -878,7 +878,7 @@ async def _show_main_menu(
     return [build_list_message(
         to,
         prompts["menu"],
-        button_text=btn_text,
+        button_label=btn_text,
         sections=sections,
     )]
 
