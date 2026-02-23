@@ -123,9 +123,11 @@ def format_whatsapp_group_message(
     """
     confirmed_at = order.updated_at or order.created_at
     date_str = confirmed_at.strftime("%d %b %Y")
-    time_str = confirmed_at.strftime("%-I:%M %p") if hasattr(
-        confirmed_at, "strftime"
-    ) else confirmed_at.strftime("%I:%M %p")
+    # Use %#I on Windows (no leading zero), %-I on Unix
+    try:
+        time_str = confirmed_at.strftime("%#I:%M %p")
+    except ValueError:
+        time_str = confirmed_at.strftime("%-I:%M %p")
 
     item_lines = "\n".join(_format_item_line(item) for item in items)
 
