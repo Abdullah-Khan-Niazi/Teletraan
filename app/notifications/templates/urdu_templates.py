@@ -212,9 +212,30 @@ OWNER_SUBSCRIPTION_7_DAYS = (
     "تجدید کریں: {renewal_link}"
 )
 
+OWNER_SUBSCRIPTION_3_DAYS = (
+    "⚠️ سبسکرپشن 3 دن میں ایکسپائر ہو گی۔\n"
+    "تجدید کریں: {renewal_link}"
+)
+
 OWNER_SUBSCRIPTION_1_DAY = (
     "🔴 فوری — سبسکرپشن کل ایکسپائر ہو گی!\n"
     "تجدید کریں: {renewal_link}"
+)
+
+OWNER_SUBSCRIPTION_EXPIRY_DAY = (
+    "🛑 سبسکرپشن آج ایکسپائر ہو رہی ہے۔\n"
+    "فوری تجدید کریں تاکہ سروس بند نہ ہو: {renewal_link}"
+)
+
+OWNER_SUBSCRIPTION_SUSPENDED = (
+    "❌ آپ کی سبسکرپشن معطل ہو گئی ہے۔\n"
+    "تجدید کے لیے {grace_days} دن باقی ہیں۔\n"
+    "تجدید کریں: {renewal_link}"
+)
+
+OWNER_SUBSCRIPTION_CANCELLED = (
+    "🚫 آپ کی سبسکرپشن منسوخ ہو گئی ہے۔\n"
+    "دوبارہ فعال کرنے کے لیے سپورٹ سے رابطہ کریں: {support_link}"
 )
 
 OWNER_DISCOUNT_REQUEST = (

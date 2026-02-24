@@ -215,9 +215,30 @@ OWNER_SUBSCRIPTION_7_DAYS = (
     "Renew here: {renewal_link}"
 )
 
+OWNER_SUBSCRIPTION_3_DAYS = (
+    "⚠️ Your subscription expires in 3 days.\n"
+    "Renew here: {renewal_link}"
+)
+
 OWNER_SUBSCRIPTION_1_DAY = (
     "🔴 URGENT — Your subscription expires tomorrow!\n"
     "Renew here: {renewal_link}"
+)
+
+OWNER_SUBSCRIPTION_EXPIRY_DAY = (
+    "🛑 Your subscription expires TODAY.\n"
+    "Renew immediately to avoid service interruption: {renewal_link}"
+)
+
+OWNER_SUBSCRIPTION_SUSPENDED = (
+    "❌ Your subscription has been suspended.\n"
+    "You have {grace_days} days to renew before cancellation.\n"
+    "Renew here: {renewal_link}"
+)
+
+OWNER_SUBSCRIPTION_CANCELLED = (
+    "🚫 Your subscription has been cancelled.\n"
+    "Contact support to reactivate: {support_link}"
 )
 
 OWNER_DISCOUNT_REQUEST = (

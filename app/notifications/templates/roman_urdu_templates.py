@@ -216,9 +216,30 @@ OWNER_SUBSCRIPTION_7_DAYS = (
     "Renew karein: {renewal_link}"
 )
 
+OWNER_SUBSCRIPTION_3_DAYS = (
+    "⚠️ Subscription 3 din mein expire hogi.\n"
+    "Renew karein: {renewal_link}"
+)
+
 OWNER_SUBSCRIPTION_1_DAY = (
     "🔴 URGENT — Subscription kal expire hogi!\n"
     "Renew karein: {renewal_link}"
+)
+
+OWNER_SUBSCRIPTION_EXPIRY_DAY = (
+    "🛑 Subscription AAJ expire ho rahi hai.\n"
+    "Abhi renew karein taake service band na ho: {renewal_link}"
+)
+
+OWNER_SUBSCRIPTION_SUSPENDED = (
+    "❌ Aapki subscription suspend ho gayi hai.\n"
+    "Renew karne ke liye {grace_days} din baaki hain.\n"
+    "Renew karein: {renewal_link}"
+)
+
+OWNER_SUBSCRIPTION_CANCELLED = (
+    "🚫 Aapki subscription cancel ho gayi hai.\n"
+    "Reactivate karne ke liye support se contact karein: {support_link}"
 )
 
 OWNER_DISCOUNT_REQUEST = (
