@@ -12,6 +12,7 @@ Database timestamps stay UTC.
 from __future__ import annotations
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from loguru import logger
 
@@ -65,6 +66,8 @@ def _register_all_jobs(scheduler: AsyncIOScheduler) -> None:
     _register_health_check_jobs(scheduler)
     _register_system_health_jobs(scheduler)
     _register_message_sender_jobs(scheduler)
+    _register_analytics_jobs(scheduler)
+    _register_report_jobs(scheduler)
 
 
 # ── Inventory Sync ──────────────────────────────────────────────────
@@ -265,3 +268,184 @@ def _register_message_sender_jobs(scheduler: AsyncIOScheduler) -> None:
         job_id="send_scheduled_messages",
         interval_minutes=2,
     )
+
+
+# ── Analytics Jobs ──────────────────────────────────────────────────
+
+
+def _register_analytics_jobs(scheduler: AsyncIOScheduler) -> None:
+    """Register analytics aggregation and churn detection jobs.
+
+    - ``analytics_aggregate`` — every 60 minutes.
+    - ``churn_detection`` — Monday 08:00 PKT.
+
+    Args:
+        scheduler: The APScheduler instance.
+    """
+    settings = get_settings()
+
+    if not settings.enable_analytics:
+        logger.info("scheduler.analytics_jobs_disabled")
+        return
+
+    from app.scheduler.jobs.report_jobs import (
+        run_churn_detection,
+        run_daily_analytics_aggregation,
+    )
+
+    scheduler.add_job(
+        run_daily_analytics_aggregation,
+        trigger=IntervalTrigger(minutes=60),
+        id="analytics_aggregate",
+        name="Analytics Aggregation — all distributors",
+        replace_existing=True,
+        max_instances=1,
+    )
+    logger.info(
+        "scheduler.job_registered",
+        job_id="analytics_aggregate",
+        interval_minutes=60,
+    )
+
+    scheduler.add_job(
+        run_churn_detection,
+        trigger=CronTrigger(
+            day_of_week="mon",
+            hour=8,
+            minute=0,
+            timezone=settings.scheduler_timezone,
+        ),
+        id="churn_detection",
+        name="Churn Detection — weekly Monday 08:00 PKT",
+        replace_existing=True,
+        max_instances=1,
+    )
+    logger.info(
+        "scheduler.job_registered",
+        job_id="churn_detection",
+        cron="mon 08:00 PKT",
+    )
+
+
+# ── Report Jobs ─────────────────────────────────────────────────────
+
+
+def _register_report_jobs(scheduler: AsyncIOScheduler) -> None:
+    """Register all report generation and dispatch jobs.
+
+    - ``daily_order_summary`` — daily 20:00 PKT WhatsApp summary.
+    - ``weekly_report`` — Monday 09:00 PKT email report.
+    - ``monthly_report`` — 1st of month 07:00 PKT email report.
+    - ``excel_dispatch_morning`` — daily 07:00 PKT.
+    - ``excel_dispatch_evening`` — daily 19:00 PKT.
+
+    Args:
+        scheduler: The APScheduler instance.
+    """
+    settings = get_settings()
+
+    from app.scheduler.jobs.report_jobs import (
+        run_daily_order_summary,
+        run_excel_report_dispatch_evening,
+        run_excel_report_dispatch_morning,
+        run_monthly_report,
+        run_weekly_report,
+    )
+
+    # Daily WhatsApp summary at 20:00 PKT
+    scheduler.add_job(
+        run_daily_order_summary,
+        trigger=CronTrigger(
+            hour=20,
+            minute=0,
+            timezone=settings.scheduler_timezone,
+        ),
+        id="daily_order_summary",
+        name="Daily Order Summary — WhatsApp 20:00 PKT",
+        replace_existing=True,
+        max_instances=1,
+    )
+    logger.info(
+        "scheduler.job_registered",
+        job_id="daily_order_summary",
+        cron="20:00 PKT",
+    )
+
+    # Weekly report — Monday 09:00 PKT
+    scheduler.add_job(
+        run_weekly_report,
+        trigger=CronTrigger(
+            day_of_week="mon",
+            hour=9,
+            minute=0,
+            timezone=settings.scheduler_timezone,
+        ),
+        id="weekly_report",
+        name="Weekly Report — Monday 09:00 PKT",
+        replace_existing=True,
+        max_instances=1,
+    )
+    logger.info(
+        "scheduler.job_registered",
+        job_id="weekly_report",
+        cron="mon 09:00 PKT",
+    )
+
+    # Monthly report — 1st of month 07:00 PKT
+    scheduler.add_job(
+        run_monthly_report,
+        trigger=CronTrigger(
+            day=1,
+            hour=7,
+            minute=0,
+            timezone=settings.scheduler_timezone,
+        ),
+        id="monthly_report",
+        name="Monthly Report — 1st 07:00 PKT",
+        replace_existing=True,
+        max_instances=1,
+    )
+    logger.info(
+        "scheduler.job_registered",
+        job_id="monthly_report",
+        cron="1st 07:00 PKT",
+    )
+
+    # Excel dispatch — morning (DAILY_MORNING) at 07:00 PKT
+    if settings.enable_excel_reports:
+        scheduler.add_job(
+            run_excel_report_dispatch_morning,
+            trigger=CronTrigger(
+                hour=7,
+                minute=0,
+                timezone=settings.scheduler_timezone,
+            ),
+            id="excel_dispatch_morning",
+            name="Excel Report Dispatch — Morning 07:00 PKT",
+            replace_existing=True,
+            max_instances=1,
+        )
+        logger.info(
+            "scheduler.job_registered",
+            job_id="excel_dispatch_morning",
+            cron="07:00 PKT",
+        )
+
+        # Excel dispatch — evening (DAILY_EVENING) at 19:00 PKT
+        scheduler.add_job(
+            run_excel_report_dispatch_evening,
+            trigger=CronTrigger(
+                hour=19,
+                minute=0,
+                timezone=settings.scheduler_timezone,
+            ),
+            id="excel_dispatch_evening",
+            name="Excel Report Dispatch — Evening 19:00 PKT",
+            replace_existing=True,
+            max_instances=1,
+        )
+        logger.info(
+            "scheduler.job_registered",
+            job_id="excel_dispatch_evening",
+            cron="19:00 PKT",
+        )
