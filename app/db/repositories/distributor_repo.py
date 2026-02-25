@@ -8,6 +8,7 @@ from typing import Optional
 from loguru import logger
 
 from app.core.exceptions import DatabaseError, NotFoundError
+from app.core.security import decrypt_sensitive, encrypt_sensitive
 from app.db.client import get_db_client
 from app.db.models.distributor import (
     Distributor,
@@ -25,6 +26,42 @@ class DistributorRepository:
     """
 
     TABLE = "distributors"
+
+    # ── CNIC Encrypt / Decrypt helpers ────────────────────────────
+
+    @staticmethod
+    def _encrypt_cnic_in_payload(payload: dict) -> dict:
+        """Encrypt the ``cnic_encrypted`` field if present and non-None."""
+        if payload.get("cnic_encrypted"):
+            payload["cnic_encrypted"] = encrypt_sensitive(
+                payload["cnic_encrypted"]
+            )
+        return payload
+
+    @staticmethod
+    def _decrypt_cnic_in_row(row: dict) -> dict:
+        """Decrypt the ``cnic_encrypted`` field if present and non-empty."""
+        if row.get("cnic_encrypted"):
+            try:
+                row["cnic_encrypted"] = decrypt_sensitive(
+                    row["cnic_encrypted"]
+                )
+            except Exception:
+                # If decryption fails, leave the ciphertext in place
+                # (avoids crashing reads for legacy unencrypted rows).
+                logger.warning(
+                    "db.cnic_decrypt_failed",
+                    distributor_id=row.get("id", "unknown"),
+                )
+        return row
+
+    def _validate_row(self, row: dict) -> Distributor:
+        """Decrypt CNIC and validate into a Distributor model."""
+        return Distributor.model_validate(self._decrypt_cnic_in_row(row))
+
+    def _validate_rows(self, rows: list[dict]) -> list[Distributor]:
+        """Decrypt CNIC in each row and validate into Distributor models."""
+        return [self._validate_row(row) for row in rows]
 
     # ── Standard CRUD ───────────────────────────────────────────────
 
@@ -50,7 +87,7 @@ class DistributorRepository:
                 .execute()
             )
             if result.data:
-                return Distributor.model_validate(result.data)
+                return self._validate_row(result.data)
             return None
         except Exception as exc:
             logger.error(
@@ -85,7 +122,7 @@ class DistributorRepository:
             )
         return result
 
-    async def create(self, data: DistributorCreate) -> Distributor:
+    async def create(self, data: DistributorCreate) -> Distributor:  # noqa: C901
         """Insert a new distributor row.
 
         Args:
@@ -99,13 +136,16 @@ class DistributorRepository:
         """
         try:
             client = get_db_client()
+            payload = self._encrypt_cnic_in_payload(
+                data.model_dump(exclude_none=True, mode="json")
+            )
             result = (
                 await client.table(self.TABLE)
-                .insert(data.model_dump(exclude_none=True, mode="json"))
+                .insert(payload)
                 .execute()
             )
             logger.info("db.record_created", table=self.TABLE)
-            return Distributor.model_validate(result.data[0])
+            return self._validate_row(result.data[0])
         except Exception as exc:
             logger.error(
                 "db.insert_failed",
@@ -133,7 +173,9 @@ class DistributorRepository:
         """
         try:
             client = get_db_client()
-            payload = data.model_dump(exclude_none=True, mode="json")
+            payload = self._encrypt_cnic_in_payload(
+                data.model_dump(exclude_none=True, mode="json")
+            )
             if not payload:
                 return await self.get_by_id_or_raise(id)
             result = (
@@ -147,7 +189,7 @@ class DistributorRepository:
                     f"{self.TABLE} with id={id} not found for update",
                     operation="update",
                 )
-            return Distributor.model_validate(result.data[0])
+            return self._validate_row(result.data[0])
         except NotFoundError:
             raise
         except Exception as exc:
@@ -188,7 +230,7 @@ class DistributorRepository:
                 .execute()
             )
             if result.data:
-                return Distributor.model_validate(result.data)
+                return self._validate_row(result.data)
             return None
         except Exception as exc:
             logger.error(
@@ -231,7 +273,7 @@ class DistributorRepository:
                 .execute()
             )
             if result.data:
-                return Distributor.model_validate(result.data)
+                return self._validate_row(result.data)
             return None
         except Exception as exc:
             logger.error(
@@ -263,7 +305,7 @@ class DistributorRepository:
                 .eq("is_deleted", False)
                 .execute()
             )
-            return [Distributor.model_validate(row) for row in result.data]
+            return self._validate_rows(result.data)
         except Exception as exc:
             logger.error(
                 "db.query_failed",
@@ -307,7 +349,7 @@ class DistributorRepository:
                 .lte("subscription_end", cutoff)
                 .execute()
             )
-            return [Distributor.model_validate(row) for row in result.data]
+            return self._validate_rows(result.data)
         except Exception as exc:
             logger.error(
                 "db.query_failed",
