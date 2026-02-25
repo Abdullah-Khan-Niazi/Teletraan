@@ -10,7 +10,9 @@ VALUES
 ON CONFLICT DO NOTHING;
 
 -- Seed the TELETRAAN service in service_registry (for Channel B)
-INSERT INTO service_registry (name, slug, description, short_description, setup_fee_paisas, monthly_fee_paisas, is_available)
+INSERT INTO service_registry (name, slug, description, short_description, setup_fee_paisas, monthly_fee_paisas, sales_flow_handler, target_business_types, is_available)
 VALUES
-    ('TELETRAAN Order Bot', 'teletraan-order-bot', 'WhatsApp-based intelligent order management system for medicine distributors. Handles retailer orders via voice and text with fuzzy matching, live billing, discount negotiation, and automated order logging.', 'WhatsApp order bot for medicine distributors', 500000, 1500000, true)
-ON CONFLICT (slug) DO NOTHING;
+    ('TELETRAAN Order Bot', 'teletraan-order-bot', 'WhatsApp-based intelligent order management system for medicine distributors. Handles retailer orders via voice and text with fuzzy matching, live billing, discount negotiation, and automated order logging.', 'WhatsApp order bot for medicine distributors', 500000, 1500000, 'teletraan_sales', ARRAY['medicine_distributor', 'pharma_distributor', 'fmcg_distributor'], true)
+ON CONFLICT (slug) DO UPDATE SET
+    sales_flow_handler = EXCLUDED.sales_flow_handler,
+    target_business_types = EXCLUDED.target_business_types;
