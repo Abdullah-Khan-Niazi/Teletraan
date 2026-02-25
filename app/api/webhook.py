@@ -180,6 +180,14 @@ async def _process_message(message: ParsedMessage) -> None:
                 logger.debug("webhook.reaction_ignored")
                 return
 
+            # ── Enforce input length limits ──────────────────────
+            if message.text and len(message.text) > 2000:
+                from app.core.security import enforce_length_limit
+
+                message.text = enforce_length_limit(
+                    message.text, max_length=2000, field_name="message_text"
+                )
+
             if message.message_type in (
                 IncomingMessageType.STICKER,
                 IncomingMessageType.LOCATION,

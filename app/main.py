@@ -46,7 +46,7 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
         3. Log clean shutdown.
     """
     settings = get_settings()
-    configure_logging(settings)
+    configure_logging(app_env=settings.app_env, log_level=settings.log_level)
     logger.info(
         "app.startup",
         env=settings.app_env,
