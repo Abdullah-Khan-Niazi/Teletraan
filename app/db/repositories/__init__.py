@@ -8,6 +8,11 @@ from __future__ import annotations
 
 from app.db.repositories.analytics_repo import AnalyticsRepository
 from app.db.repositories.audit_repo import AuditRepository
+from app.db.repositories.daily_analytics_repo import DailyAnalyticsRepository
+from app.db.repositories.top_items_repo import (
+    CustomerEventRepository,
+    TopItemRepository,
+)
 from app.db.repositories.catalog_repo import CatalogRepository
 from app.db.repositories.complaint_repo import ComplaintRepository
 from app.db.repositories.delivery_zone_repo import DeliveryZoneRepository
@@ -49,6 +54,9 @@ service_registry_repo = ServiceRegistryRepository()
 
 # Group 3 — operational / logging / auxiliary
 analytics_repo = AnalyticsRepository()
+daily_analytics_repo = DailyAnalyticsRepository()
+top_item_repo = TopItemRepository()
+customer_event_repo = CustomerEventRepository()
 audit_repo = AuditRepository()
 notification_repo = NotificationRepository()
 scheduled_message_repo = ScheduledMessageRepository()
@@ -59,6 +67,9 @@ __all__ = [
     # Repository classes
     "AnalyticsRepository",
     "AuditRepository",
+    "DailyAnalyticsRepository",
+    "TopItemRepository",
+    "CustomerEventRepository",
     "CatalogRepository",
     "ComplaintRepository",
     "DeliveryZoneRepository",
@@ -79,6 +90,9 @@ __all__ = [
     # Singleton instances
     "analytics_repo",
     "audit_repo",
+    "daily_analytics_repo",
+    "top_item_repo",
+    "customer_event_repo",
     "catalog_repo",
     "complaint_repo",
     "delivery_zone_repo",

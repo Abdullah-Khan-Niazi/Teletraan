@@ -7,6 +7,14 @@ Re-exports every Pydantic model so callers can do::
 
 from __future__ import annotations
 
+from app.db.models.analytics import (
+    CustomerEvent,
+    CustomerEventCreate,
+    DailyAnalytics,
+    DailyAnalyticsCreate,
+    TopItem,
+    TopItemCreate,
+)
 from app.db.models.audit import (
     AnalyticsEvent,
     AnalyticsEventCreate,
@@ -130,4 +138,11 @@ __all__ = [
     "BotConfiguration",
     "BotConfigurationCreate",
     "BotConfigurationUpdate",
+    # Analytics Aggregation
+    "DailyAnalytics",
+    "DailyAnalyticsCreate",
+    "TopItem",
+    "TopItemCreate",
+    "CustomerEvent",
+    "CustomerEventCreate",
 ]
