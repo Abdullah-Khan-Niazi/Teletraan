@@ -38,13 +38,12 @@ async def run_daily_analytics_aggregation() -> None:
         from app.analytics.aggregator import aggregator
 
         today = date.today()
-        results = await aggregator.compute_all_distributors(today)
+        processed = await aggregator.compute_all_distributors(today)
 
         logger.info(
             "scheduler.analytics_aggregate.complete",
             date=str(today),
-            distributors_processed=results.get("processed", 0),
-            errors=results.get("errors", 0),
+            distributors_processed=processed,
         )
     except Exception as exc:
         logger.error(
@@ -389,15 +388,43 @@ async def run_churn_detection() -> None:
         from app.db.client import get_db_client
         from app.reporting.email_dispatch import email_dispatcher
 
-        results = await aggregator.run_churn_detection()
+        total_events = await aggregator.run_churn_detection()
 
-        # Send email alerts for distributors with critical churn
+        logger.info(
+            "scheduler.churn_detection.events_created",
+            total_events=total_events,
+        )
+
+        # Send email alerts for distributors with recent churn events
         client = get_db_client()
         alerts_sent = 0
 
-        for dist_result in results:
-            dist_id = dist_result.get("distributor_id")
-            events = dist_result.get("events", [])
+        # Fetch today's churn events grouped by distributor
+        try:
+            churn_result = (
+                await client.table("analytics_customer_events")
+                .select("distributor_id, customer_id, event_type, event_data, occurred_at")
+                .eq("event_type", "churn_risk")
+                .gte("occurred_at", datetime.combine(
+                    date.today(), datetime.min.time(), tzinfo=timezone.utc,
+                ).isoformat())
+                .execute()
+            )
+        except Exception as exc:
+            logger.error(
+                "scheduler.churn_detection.events_query_failed",
+                error=str(exc),
+            )
+            return
+
+        # Group by distributor
+        dist_events: dict[str, list] = {}
+        for row in churn_result.data:
+            did = row.get("distributor_id")
+            if did:
+                dist_events.setdefault(did, []).append(row)
+
+        for dist_id, events in dist_events.items():
             if not events:
                 continue
 
@@ -405,11 +432,13 @@ async def run_churn_detection() -> None:
             churning = []
             for event in events:
                 customer_name = "Unknown"
+                event_data = event.get("event_data", {}) or {}
+                customer_id = event.get("customer_id")
                 try:
                     cust = (
                         await client.table("customers")
                         .select("name")
-                        .eq("id", event.customer_id)
+                        .eq("id", customer_id)
                         .limit(1)
                         .execute()
                     )
@@ -418,14 +447,14 @@ async def run_churn_detection() -> None:
                 except Exception:
                     pass
 
+                # Use event_data for days_inactive if available
+                days_inactive = event_data.get("days_inactive", 0)
+                level = event_data.get("level", "warning")
+
                 churning.append({
                     "customer_name": customer_name,
-                    "days_inactive": (date.today() - event.occurred_at.date()).days
-                    if hasattr(event.occurred_at, "date")
-                    else 0,
-                    "severity": event.event_type.replace("churn_", "")
-                    if "churn_" in event.event_type
-                    else event.event_type,
+                    "days_inactive": days_inactive,
+                    "severity": level,
                 })
 
             if not churning:
