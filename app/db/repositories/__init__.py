@@ -20,6 +20,7 @@ from app.db.repositories.order_repo import OrderRepository
 from app.db.repositories.payment_repo import PaymentRepository
 from app.db.repositories.prospect_repo import ProspectRepository
 from app.db.repositories.rate_limit_repo import RateLimitRepository
+from app.db.repositories.service_registry_repo import ServiceRegistryRepository
 from app.db.repositories.scheduled_message_repo import ScheduledMessageRepository
 from app.db.repositories.session_repo import SessionRepository
 from app.db.repositories.support_ticket_repo import SupportTicketRepository
@@ -44,6 +45,7 @@ payment_repo = PaymentRepository()
 complaint_repo = ComplaintRepository()
 support_ticket_repo = SupportTicketRepository()
 prospect_repo = ProspectRepository()
+service_registry_repo = ServiceRegistryRepository()
 
 # Group 3 — operational / logging / auxiliary
 analytics_repo = AnalyticsRepository()
@@ -69,6 +71,7 @@ __all__ = [
     "PaymentRepository",
     "ProspectRepository",
     "RateLimitRepository",
+    "ServiceRegistryRepository",
     "ScheduledMessageRepository",
     "SessionRepository",
     "SupportTicketRepository",
@@ -88,6 +91,7 @@ __all__ = [
     "payment_repo",
     "prospect_repo",
     "rate_limit_repo",
+    "service_registry_repo",
     "scheduled_message_repo",
     "session_repo",
     "support_ticket_repo",

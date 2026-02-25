@@ -46,6 +46,11 @@ from app.db.models.order import (
 )
 from app.db.models.payment import Payment, PaymentCreate, PaymentUpdate
 from app.db.models.prospect import Prospect, ProspectCreate, ProspectUpdate
+from app.db.models.service_registry import (
+    ServiceRegistryCreate,
+    ServiceRegistryEntry,
+    ServiceRegistryUpdate,
+)
 from app.db.models.session import Session, SessionCreate, SessionUpdate
 from app.db.models.support_ticket import (
     SupportTicket,
@@ -100,6 +105,10 @@ __all__ = [
     "Prospect",
     "ProspectCreate",
     "ProspectUpdate",
+    # Service Registry
+    "ServiceRegistryEntry",
+    "ServiceRegistryCreate",
+    "ServiceRegistryUpdate",
     # Audit / Operational
     "AuditLog",
     "AuditLogCreate",
