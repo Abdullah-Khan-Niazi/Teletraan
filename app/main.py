@@ -175,9 +175,9 @@ def _register_routers(application: FastAPI) -> None:
 
     application.include_router(payments_router)
 
-    # Future routers (added in later phases):
-    # from app.api.admin import router as admin_router
-    # application.include_router(admin_router)
+    from app.api.admin import router as admin_router
+
+    application.include_router(admin_router)
 
 
 # ── Exception Handlers ──────────────────────────────────────────────
