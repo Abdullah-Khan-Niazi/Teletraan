@@ -214,7 +214,7 @@ async def _handle_interrupt(
 
     await session_repo.update_state(
         str(session.id),
-        target.value,
+        target,
         previous_state=session.current_state,
     )
 

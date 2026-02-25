@@ -175,6 +175,7 @@ async def _start_onboarding(
             business_name=business_name,
             owner_name=owner_name,
             whatsapp_number=to,
+            whatsapp_phone_number_id=state_data.get("whatsapp_phone_number_id", "pending"),
             subscription_status=SubscriptionStatus.ACTIVE,
             subscription_start=now,
             subscription_end=now + timedelta(days=30),
