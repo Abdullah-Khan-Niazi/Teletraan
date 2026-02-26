@@ -1,5 +1,7 @@
 /* ── CSS Reset ─────────────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+/* Ensure [hidden] always wins over any author-level display rule */
+[hidden]{display:none!important}
 html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{min-height:100vh;line-height:1.5;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 img,picture,video,canvas,svg{display:block;max-width:100%}
