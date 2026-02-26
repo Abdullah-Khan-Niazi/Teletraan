@@ -61,23 +61,23 @@ TELETRAAN is the **coordination layer of Primus** — the system that, in the fu
 </tr>
 </thead>
 <tbody>
-<tr><td align="center"><strong>Alchemist</strong></td><td>Financial intelligence & accounting automation</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Amalgamous</strong></td><td>Data integration & transformation pipeline</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Elita</strong></td><td>Human resources & team operations</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Liege Maximo</strong></td><td>Governance, permissions & access control layer</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Megatronus</strong></td><td>Threat intelligence & security monitoring</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Micronus</strong></td><td>Micro-service infrastructure & service mesh</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Nexus</strong></td><td>Inter-system event bus & message routing</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Onyx</strong></td><td>Knowledge base & document intelligence</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Optimus</strong></td><td>Executive dashboard & top-level command interface</td><td align="center"><code>Planned</code></td></tr>
+<tr><td align="center"><strong>Alchemist</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
+<tr><td align="center"><strong>Amalgamous</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
+<tr><td align="center"><strong>Elita</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
+<tr><td align="center"><strong>Liege Maximo</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
+<tr><td align="center"><strong>Megatronus</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
+<tr><td align="center"><strong>Micronus</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
+<tr><td align="center"><strong>Nexus</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
+<tr><td align="center"><strong>Onyx</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
+<tr><td align="center"><strong>Optimus</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
 <tr><td align="center"><strong>Orion</strong></td><td>ERP system — inventory, procurement, operations</td><td align="center"><code>✓ In Production</code></td></tr>
-<tr><td align="center"><strong>Prima</strong></td><td>Customer-facing portal & self-service layer</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Quintus</strong></td><td>AI research, model evaluation & prompt engineering</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Sentinel</strong></td><td>Monitoring, alerting & uptime management</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Solus</strong></td><td>Product design, catalog management & publishing</td><td align="center"><code>Planned</code></td></tr>
+<tr><td align="center"><strong>Prima</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
+<tr><td align="center"><strong>Quintus</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
+<tr><td align="center"><strong>Sentinel</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
+<tr><td align="center"><strong>Solus</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
 <tr><td align="center"><strong>Teletraan</strong></td><td>WhatsApp automation, order management & coordination hub</td><td align="center"><code>✓ In Production</code></td></tr>
-<tr><td align="center"><strong>Vector</strong></td><td>Logistics, delivery tracking & route optimization</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Zeta</strong></td><td>Analytics, BI dashboards & reporting infrastructure</td><td align="center"><code>Planned</code></td></tr>
+<tr><td align="center"><strong>Vector</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
+<tr><td align="center"><strong>Zeta</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
 </tbody>
 </table>
 
@@ -91,31 +91,6 @@ Two Primus systems are currently in production:
 The remaining 15 systems are on the Primus roadmap. As each is built, **TELETRAAN will expand its coordination role** — receiving events from Nexus, surfacing data for Optimus, enforcing policies from Liege Maximo, triggering reports in Zeta, delegating delivery tasks to Vector.
 
 ---
-
-### TELETRAAN as the Coordination Node
-
-Why is TELETRAAN the coordination layer and not, say, Nexus (the event bus)?
-
-Because Teletraan-1 was not merely a message router — it was the **intelligent processor** at the center. It understood context, maintained state across sessions, made decisions, and initiated action. Nexus will carry raw events. TELETRAAN will **understand** them.
-
-In the Primus architecture, TELETRAAN will:
-
-- Receive structured events from Orion (stock changes, price updates, new products)
-- Relay operational data to Zeta for analytics dashboards
-- Hand off customer complaint tickets to a future support system
-- Trigger Vector deliveries when orders are confirmed
-- Check Liege Maximo for permission before surfacing sensitive distributor data
-- Notify Optimus when a system-wide event requires human executive attention
-- Pull knowledge from Onyx to answer complex product queries
-- Interface with Alchemist to reconcile payment records against accounting ledgers
-
-It is the translation layer between the human world (WhatsApp conversations) and the machine world (Primus systems). Everything flows through it.
-
-<br/>
-
----
-
-<br/>
 
 ## Scalability Architecture
 
@@ -142,8 +117,8 @@ Payment Gateways → BaseGateway   → [JazzCash, EasyPaisa, SafePay, NayaPay, B
 Channels         → BaseChannel   → [ChannelA, ChannelB, ...future channels]
 ```
 
-Adding a new AI provider: implement `BaseAIProvider`, register in `ai_factory.py`. Done.  
-Adding a new payment gateway: implement `BaseGateway`, register in `gateway_factory.py`. Done.  
+Adding a new AI provider: implement `BaseAIProvider`, register in `ai_factory.py`. Done.
+Adding a new payment gateway: implement `BaseGateway`, register in `gateway_factory.py`. Done.
 Adding a new channel (e.g., a Channel C for B2B enterprise sales): implement the flow, register in `channel_router.py`. Done.
 
 No other code changes required anywhere in the system.
@@ -198,14 +173,14 @@ New Primus system integrations will be added as new env var groups — `ORION_AP
 
 ### Horizontal Scaling Path
 
-| Scale Point | Current | Next Step |
-|:---|:---|:---|
-| Distributors | Unlimited (DB-scoped) | No change needed |
-| Concurrent sessions | ~200 (in-memory rate limiter) | Move rate limiter to Redis |
-| Request volume | Single instance + async | Add Gunicorn workers or second instance |
-| Background jobs | APScheduler (in-process) | Migrate to Celery + broker at >50 distributors |
-| Analytics | Direct DB queries | Materialized views or dedicated read replica |
-| Primus connections | Not yet connected | Add Nexus event publisher per event type |
+| Scale Point         | Current                       | Next Step                                      |
+| :------------------ | :---------------------------- | :--------------------------------------------- |
+| Distributors        | Unlimited (DB-scoped)         | No change needed                               |
+| Concurrent sessions | ~200 (in-memory rate limiter) | Move rate limiter to Redis                     |
+| Request volume      | Single instance + async       | Add Gunicorn workers or second instance        |
+| Background jobs     | APScheduler (in-process)      | Migrate to Celery + broker at >50 distributors |
+| Analytics           | Direct DB queries             | Materialized views or dedicated read replica   |
+| Primus connections  | Not yet connected             | Add Nexus event publisher per event type       |
 
 <br/>
 
@@ -256,21 +231,21 @@ A dedicated WhatsApp number for Primus software sales:
 
 ### Platform Capabilities
 
-| Capability | Detail |
-|:---|:---|
-| **Multi-Provider AI** | Gemini 1.5 Flash (default), GPT-4o-mini, Claude Sonnet, Cohere, OpenRouter — automatic fallback chain if primary provider fails |
-| **NLU Engine** | Intent classification across 20+ intents, entity extraction (medicine names, quantities, addresses, amounts), sentiment analysis, language detection |
-| **Voice Processing** | Whisper transcription of WhatsApp voice notes → NLU → order processing; seamless with text flow |
-| **Inventory Sync** | Scheduled pull from Orion/Google Drive with change detection, product deduplication, and stock level updates |
-| **Fuzzy Matching** | Medicine name normalization, brand/generic matching, confidence-scored results with threshold gating |
-| **Payment Orchestration** | 6 gateways, webhook HMAC verification per gateway, payment link expiry, retry on failure, reconciliation logging |
-| **Reporting Engine** | XLSX order reports, PDF medicine catalogs, daily/weekly/monthly email digests with performance metrics |
-| **Analytics System** | 20+ event types logged per interaction; distributor, customer, order, and system-level aggregations |
-| **Distributor Lifecycle** | Trial management (configurable days), subscription plans, renewal reminders (7/3/1 day alerts), onboarding wizard, support tickets |
-| **Admin Dashboard** | Monochrome web UI: 8 pages, full CRUD on all entities, system health, force sync, announcements |
-| **Scheduled Jobs** | 14 background jobs — health checks every 5 min, session cleanup every 6h, inventory sync every 2h, subscription alerts daily |
-| **Security Layer** | HMAC webhook verification, Fernet field encryption, PII masking in all logs, prompt injection defense, per-number rate limiting |
-| **Multi-language** | Urdu, Roman Urdu, English — language detected per message, responses matched to detected language |
+| Capability                | Detail                                                                                                                                               |
+| :------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Multi-Provider AI**     | Gemini 1.5 Flash (default), GPT-4o-mini, Claude Sonnet, Cohere, OpenRouter — automatic fallback chain if primary provider fails                      |
+| **NLU Engine**            | Intent classification across 20+ intents, entity extraction (medicine names, quantities, addresses, amounts), sentiment analysis, language detection |
+| **Voice Processing**      | Whisper transcription of WhatsApp voice notes → NLU → order processing; seamless with text flow                                                      |
+| **Inventory Sync**        | Scheduled pull from Orion/Google Drive with change detection, product deduplication, and stock level updates                                         |
+| **Fuzzy Matching**        | Medicine name normalization, brand/generic matching, confidence-scored results with threshold gating                                                 |
+| **Payment Orchestration** | 6 gateways, webhook HMAC verification per gateway, payment link expiry, retry on failure, reconciliation logging                                     |
+| **Reporting Engine**      | XLSX order reports, PDF medicine catalogs, daily/weekly/monthly email digests with performance metrics                                               |
+| **Analytics System**      | 20+ event types logged per interaction; distributor, customer, order, and system-level aggregations                                                  |
+| **Distributor Lifecycle** | Trial management (configurable days), subscription plans, renewal reminders (7/3/1 day alerts), onboarding wizard, support tickets                   |
+| **Admin Dashboard**       | Monochrome web UI: 8 pages, full CRUD on all entities, system health, force sync, announcements                                                      |
+| **Scheduled Jobs**        | 14 background jobs — health checks every 5 min, session cleanup every 6h, inventory sync every 2h, subscription alerts daily                         |
+| **Security Layer**        | HMAC webhook verification, Fernet field encryption, PII masking in all logs, prompt injection defense, per-number rate limiting                      |
+| **Multi-language**        | Urdu, Roman Urdu, English — language detected per message, responses matched to detected language                                                    |
 
 <br/>
 
@@ -282,46 +257,46 @@ A dedicated WhatsApp number for Primus software sales:
 
 ```
                           ┌─────────────────────────────────────┐
-                          │         External World               │
-                          │                                      │
-                          │  WhatsApp                Meta API    │
+                          │         External World              │
+                          │                                     │
+                          │  WhatsApp                Meta API   │
                           │  Retailer ──────────── Webhook ──►  │
-                          │  Voice Note                          │
+                          │  Voice Note                         │
                           └──────────────────────┬──────────────┘
                                                  │
                           ┌──────────────────────▼──────────────┐
                           │       FastAPI Application           │
-                          │                                      │
-                          │  ┌─────────┐  ┌─────────────────┐  │
-                          │  │Webhook  │  │  Admin API      │  │
-                          │  │Handler  │  │  X-Admin-Key    │  │
-                          │  └────┬────┘  └────────┬────────┘  │
+                          │                                     │
+                          │  ┌─────────┐  ┌─────────────────┐   │
+                          │  │Webhook  │  │  Admin API      │   │
+                          │  │Handler  │  │  X-Admin-Key    │   │
+                          │  └────┬────┘  └────────┬────────┘   │
                           │       │                 │           │
-                          │  ┌────▼─────────────────▼────────┐ │
-                          │  │         Orchestrator           │ │
-                          │  │  Security → Parse → NLU →     │ │
-                          │  │  Session → Channel Router →   │ │
-                          │  │  Flow Handler → Response      │ │
-                          │  └────┬──────────────────────────┘ │
+                          │  ┌────▼─────────────────▼────────┐  │
+                          │  │         Orchestrator          │  │
+                          │  │  Security → Parse → NLU →     │  │
+                          │  │  Session → Channel Router →   │  │
+                          │  │  Flow Handler → Response      │  │
+                          │  └────┬──────────────────────────┘  │
                           │       │                             │
-                          │  ┌────▼──────────────────────────┐ │
-                          │  │      Service Layer             │ │
-                          │  │  Orders  Payments  Inventory  │ │
-                          │  │  Analytics  Reporting  Notifs │ │
-                          │  └────┬──────────────────────────┘ │
+                          │  ┌────▼──────────────────────────┐  │
+                          │  │      Service Layer            │  │
+                          │  │  Orders  Payments  Inventory  │  │
+                          │  │  Analytics  Reporting  Notifs │  │
+                          │  └────┬──────────────────────────┘  │
                           │       │                             │
-                          │  ┌────▼──────────────────────────┐ │
-                          │  │    Repository Layer (21 repos) │ │
-                          │  │    Pydantic models (26 tables) │ │
-                          │  └────┬──────────────────────────┘ │
+                          │  ┌────▼──────────────────────────┐  │
+                          │  │    Repository Layer (21 repos)│  │
+                          │  │    Pydantic models (26 tables)│  │
+                          │  └────┬──────────────────────────┘  │
                           └───────┼─────────────────────────────┘
                                   │
                     ┌─────────────┼──────────────────┐
                     │             │                  │
                ┌────▼────┐ ┌─────▼─────┐  ┌────────▼──────┐
-               │Supabase │ │AI Providers│  │Payment Gateways│
-               │Postgres │ │Gemini/GPT/ │  │JazzCash/Easyp.│
-               │26 tables│ │Claude/etc. │  │SafePay/NayaPay│
+               │Supabase │ │AI Providers│ │Payment Gateways│
+               │Postgres │ │Gemini/GPT/│  │JazzCash/Easyp.│
+               │26 tables│ │Claude/etc.│  │SafePay/NayaPay│
                └─────────┘ └───────────┘  └───────────────┘
 ```
 
@@ -544,16 +519,16 @@ TELETRAAN ships with a complete admin command center at `/dashboard`. Zero exter
 
 ### Pages
 
-| Page | What It Does |
-|:---|:---|
-| **Overview** | Live KPIs: active distributors, total customers, orders in last 24h, revenue, environment mode, feature flags |
-| **Distributors** | Full lifecycle management — create, suspend, reactivate, extend subscription, view all sub-data in tabbed interface |
-| **Orders** | Per-distributor order listing with status filter (6 statuses), time window filter, full order detail with line items and billing breakdown |
-| **Customers** | Customer registry per distributor — verification status, total orders, lifetime spend, block/unblock actions |
-| **Payments** | Transaction records per distributor — gateway breakdown, status filter (6 statuses), payment amounts, external links |
-| **Sessions** | Active WhatsApp sessions — channel assignment, conversation state, handoff status, real-time refresh |
-| **Analytics** | Event log with type filter, event frequency breakdown by type, full JSON event data inspection |
-| **System** | Database health, AI provider health, payment gateway health, force inventory sync, broadcast announcement to all distributors |
+| Page             | What It Does                                                                                                                               |
+| :--------------- | :----------------------------------------------------------------------------------------------------------------------------------------- |
+| **Overview**     | Live KPIs: active distributors, total customers, orders in last 24h, revenue, environment mode, feature flags                              |
+| **Distributors** | Full lifecycle management — create, suspend, reactivate, extend subscription, view all sub-data in tabbed interface                        |
+| **Orders**       | Per-distributor order listing with status filter (6 statuses), time window filter, full order detail with line items and billing breakdown |
+| **Customers**    | Customer registry per distributor — verification status, total orders, lifetime spend, block/unblock actions                               |
+| **Payments**     | Transaction records per distributor — gateway breakdown, status filter (6 statuses), payment amounts, external links                       |
+| **Sessions**     | Active WhatsApp sessions — channel assignment, conversation state, handoff status, real-time refresh                                       |
+| **Analytics**    | Event log with type filter, event frequency breakdown by type, full JSON event data inspection                                             |
+| **System**       | Database health, AI provider health, payment gateway health, force inventory sync, broadcast announcement to all distributors              |
 
 ### Dashboard API Endpoints (Protected)
 
@@ -632,16 +607,16 @@ pytest tests/ -v
 
 ## Documentation
 
-| Document | Description |
-|:---|:---|
-| [Architecture](docs/architecture.md) | System design, component diagrams, data flows, Primus integration points |
-| [API Reference](docs/api_reference.md) | All 30+ endpoints with full request/response schemas |
-| [Database Schema](docs/database_schema.md) | 26 tables: columns, types, constraints, relationships |
-| [Deployment Guide](docs/deployment_guide.md) | Render, Railway, environment setup, dashboard access |
-| [Onboarding Guide](docs/onboarding_guide.md) | How to onboard a new distributor (wizard walkthrough) |
-| [Payment Gateways](docs/payment_gateways.md) | Integration guide, webhook setup per gateway |
-| [AI Providers](docs/ai_providers.md) | Provider switching, fallback configuration, cost comparison |
-| [Conversation Flows](docs/conversation_flows.md) | Channel A & B FSM state diagrams with transition conditions |
+| Document                                         | Description                                                              |
+| :----------------------------------------------- | :----------------------------------------------------------------------- |
+| [Architecture](docs/architecture.md)             | System design, component diagrams, data flows, Primus integration points |
+| [API Reference](docs/api_reference.md)           | All 30+ endpoints with full request/response schemas                     |
+| [Database Schema](docs/database_schema.md)       | 26 tables: columns, types, constraints, relationships                    |
+| [Deployment Guide](docs/deployment_guide.md)     | Render, Railway, environment setup, dashboard access                     |
+| [Onboarding Guide](docs/onboarding_guide.md)     | How to onboard a new distributor (wizard walkthrough)                    |
+| [Payment Gateways](docs/payment_gateways.md)     | Integration guide, webhook setup per gateway                             |
+| [AI Providers](docs/ai_providers.md)             | Provider switching, fallback configuration, cost comparison              |
+| [Conversation Flows](docs/conversation_flows.md) | Channel A & B FSM state diagrams with transition conditions              |
 
 <br/>
 
@@ -692,7 +667,7 @@ This is not a demo. It is a production-grade system built to the same standard a
 ## Acknowledgments
 
 **Designed and directed by [Abdullah-Khan-Niazi](https://github.com/Abdullah-Khan-Niazi)**
-— architect of Project Primus, product owner, and the vision behind TELETRAAN.  
+— architect of Project Primus, product owner, and the vision behind TELETRAAN.
 The system exists because he knew exactly what it needed to do.
 
 **Coded entirely by Claude Opus 4.6** (Anthropic) via GitHub Copilot Pro
@@ -704,21 +679,9 @@ The system exists because he knew exactly what it needed to do.
 
 <br/>
 
-## Roadmap — Primus Integration
+## Primus Integration
 
-When the next Primus systems come online, TELETRAAN will expand its role:
-
-| Integration | What Changes in TELETRAAN |
-|:---|:---|
-| **Nexus** (event bus) | Analytics events published to Nexus stream alongside local DB logging |
-| **Orion** (ERP) | Live inventory pulled from Orion API instead of manual CSV sync |
-| **Vector** (logistics) | Order confirmation triggers Vector delivery assignment |
-| **Zeta** (analytics BI) | Event data streamed to Zeta for executive dashboards |
-| **Alchemist** (finance) | Payment confirmations reconciled against Alchemist ledger entries |
-| **Liege Maximo** (access) | Admin API permissions validated against Liege Maximo policy engine |
-| **Optimus** (executive) | System alerts and critical errors escalated to Optimus command interface |
-| **Onyx** (knowledge) | Product queries resolved against Onyx knowledge base |
-| **Prima** (portal) | Retailer web portal (Prima) shows order status, synchronised with TELETRAAN |
+When the next Primus systems come online, TELETRAAN will expand its role.
 
 TELETRAAN's architecture was already designed for these connections. Adding each integration requires implementing a new client module and configuring new environment variables — no changes to existing business logic.
 
