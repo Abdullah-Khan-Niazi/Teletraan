@@ -341,14 +341,22 @@ async def system_status() -> AdminResponse:
 
     db_ok = await db_health_check()
     settings = get_settings()
-    distributors = await distributor_repo.get_active_distributors()
+    
+    # Attempt to get active distributors, but gracefully handle DB failures
+    distributor_count = 0
+    try:
+        distributors = await distributor_repo.get_active_distributors()
+        distributor_count = len(distributors)
+    except Exception as e:
+        logger.debug("admin.status_distributor_query_failed", error=str(e))
+        # If DB is down, return 0 — don't fail the entire status check
 
     return AdminResponse(
         success=True,
         message="System status retrieved.",
         data={
             "database": "ok" if db_ok else "unavailable",
-            "active_distributors": len(distributors),
+            "active_distributors": distributor_count,
             "environment": settings.app_env,
             "ai_provider": settings.active_ai_provider,
             "payment_gateway": settings.active_payment_gateway,
