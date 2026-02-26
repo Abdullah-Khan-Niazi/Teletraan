@@ -18,7 +18,14 @@ from pydantic import BaseModel, Field
 from app.core.config import get_settings
 from app.core.constants import SubscriptionStatus
 from app.db.models.distributor import DistributorCreate, DistributorUpdate
-from app.db.repositories import distributor_repo
+from app.db.repositories import (
+    analytics_repo,
+    customer_repo,
+    distributor_repo,
+    order_repo,
+    payment_repo,
+    session_repo,
+)
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -560,4 +567,404 @@ async def send_announcement(body: AnnouncementRequest) -> AdminResponse:
         success=True,
         message=f"Announcement sent to {sent}/{len(targets)} distributors.",
         data={"sent": sent, "failed": failed},
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════
+# DASHBOARD DATA ENDPOINTS
+# ═══════════════════════════════════════════════════════════════════
+
+
+@router.get(
+    "/dashboard/overview",
+    response_model=AdminResponse,
+    summary="Dashboard overview metrics",
+    dependencies=[Depends(verify_admin_key)],
+)
+async def dashboard_overview() -> AdminResponse:
+    """Aggregate metrics for the admin dashboard home screen."""
+    from app.db.client import health_check as db_health_check
+
+    settings = get_settings()
+    db_ok = await db_health_check()
+    distributors = await distributor_repo.get_active_distributors()
+
+    total_orders = 0
+    total_revenue = 0
+    total_customers = 0
+    active_sessions = 0
+    pending_orders = 0
+    recent_orders_list: list[dict] = []
+
+    for d in distributors:
+        did = str(d.id)
+        try:
+            customers = await customer_repo.get_active_customers(did, limit=1000)
+            total_customers += len(customers)
+        except Exception:
+            pass
+        try:
+            recent = await order_repo.get_recent_orders(did, hours=24)
+            total_orders += len(recent)
+            for o in recent:
+                total_revenue += o.total_paisas
+                if o.status == "pending":
+                    pending_orders += 1
+                recent_orders_list.append({
+                    "id": str(o.id),
+                    "order_number": o.order_number,
+                    "distributor_id": did,
+                    "distributor_name": d.business_name,
+                    "status": o.status if isinstance(o.status, str) else o.status.value,
+                    "total_paisas": o.total_paisas,
+                    "payment_status": o.payment_status if isinstance(o.payment_status, str) else o.payment_status.value,
+                    "created_at": o.created_at.isoformat(),
+                })
+        except Exception:
+            pass
+
+    recent_orders_list.sort(key=lambda x: x["created_at"], reverse=True)
+
+    return AdminResponse(
+        success=True,
+        message="Dashboard overview.",
+        data={
+            "database": "ok" if db_ok else "unavailable",
+            "environment": settings.app_env,
+            "ai_provider": settings.active_ai_provider,
+            "payment_gateway": settings.active_payment_gateway,
+            "total_distributors": len(distributors),
+            "total_customers": total_customers,
+            "orders_today": total_orders,
+            "revenue_today_paisas": total_revenue,
+            "pending_orders": pending_orders,
+            "recent_orders": recent_orders_list[:20],
+            "distributors": [
+                {
+                    "id": str(d.id),
+                    "business_name": d.business_name,
+                    "owner_name": d.owner_name,
+                    "city": d.city,
+                    "whatsapp_number": d.whatsapp_number,
+                    "subscription_status": d.subscription_status if isinstance(d.subscription_status, str) else d.subscription_status.value,
+                    "is_active": d.is_active,
+                    "onboarding_completed": d.onboarding_completed,
+                    "created_at": d.created_at.isoformat(),
+                }
+                for d in distributors
+            ],
+            "feature_flags": {
+                "voice_processing": settings.enable_voice_processing,
+                "inventory_sync": settings.enable_inventory_sync,
+                "excel_reports": settings.enable_excel_reports,
+                "channel_b": settings.enable_channel_b,
+                "analytics": settings.enable_analytics,
+                "credit_accounts": settings.enable_credit_accounts,
+            },
+        },
+    )
+
+
+@router.get(
+    "/dashboard/distributors/{distributor_id}/customers",
+    response_model=AdminResponse,
+    summary="List customers for a distributor",
+    dependencies=[Depends(verify_admin_key)],
+)
+async def list_distributor_customers(
+    distributor_id: str, limit: int = 100, offset: int = 0
+) -> AdminResponse:
+    """Fetch all customers belonging to a distributor."""
+    distributor = await distributor_repo.get_by_id(distributor_id)
+    if distributor is None:
+        raise HTTPException(status_code=404, detail="Distributor not found.")
+
+    customers = await customer_repo.get_active_customers(
+        distributor_id, limit=limit, offset=offset
+    )
+    items = [
+        {
+            "id": str(c.id),
+            "name": c.name,
+            "shop_name": c.shop_name,
+            "whatsapp_number": c.whatsapp_number,
+            "city": c.city,
+            "is_verified": c.is_verified,
+            "is_blocked": c.is_blocked,
+            "blocked_reason": c.blocked_reason,
+            "total_orders": c.total_orders,
+            "total_spend_paisas": c.total_spend_paisas,
+            "last_order_at": c.last_order_at.isoformat() if c.last_order_at else None,
+            "registered_at": c.registered_at.isoformat() if c.registered_at else None,
+        }
+        for c in customers
+    ]
+    return AdminResponse(
+        success=True,
+        message=f"{len(items)} customers.",
+        data=items,
+    )
+
+
+@router.post(
+    "/dashboard/customers/{customer_id}/block",
+    response_model=AdminResponse,
+    summary="Block a customer",
+    dependencies=[Depends(verify_admin_key)],
+)
+async def block_customer_endpoint(
+    customer_id: str, distributor_id: str, reason: str = "Blocked by admin"
+) -> AdminResponse:
+    """Block a customer from placing orders."""
+    try:
+        customer = await customer_repo.block_customer(
+            customer_id, distributor_id, reason
+        )
+        return AdminResponse(
+            success=True,
+            message=f"Customer {customer.name} blocked.",
+            data={"id": str(customer.id), "is_blocked": True},
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.post(
+    "/dashboard/customers/{customer_id}/unblock",
+    response_model=AdminResponse,
+    summary="Unblock a customer",
+    dependencies=[Depends(verify_admin_key)],
+)
+async def unblock_customer_endpoint(
+    customer_id: str, distributor_id: str
+) -> AdminResponse:
+    """Unblock a previously blocked customer."""
+    try:
+        customer = await customer_repo.unblock_customer(
+            customer_id, distributor_id
+        )
+        return AdminResponse(
+            success=True,
+            message=f"Customer {customer.name} unblocked.",
+            data={"id": str(customer.id), "is_blocked": False},
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.get(
+    "/dashboard/distributors/{distributor_id}/orders",
+    response_model=AdminResponse,
+    summary="List orders for a distributor",
+    dependencies=[Depends(verify_admin_key)],
+)
+async def list_distributor_orders(
+    distributor_id: str,
+    status_filter: Optional[str] = None,
+    hours: int = 168,
+) -> AdminResponse:
+    """Fetch recent orders for a distributor, optionally filtered by status."""
+    distributor = await distributor_repo.get_by_id(distributor_id)
+    if distributor is None:
+        raise HTTPException(status_code=404, detail="Distributor not found.")
+
+    if status_filter:
+        orders = await order_repo.get_orders_by_status(
+            distributor_id, status_filter
+        )
+    else:
+        orders = await order_repo.get_recent_orders(distributor_id, hours=hours)
+
+    items = [
+        {
+            "id": str(o.id),
+            "order_number": o.order_number,
+            "customer_id": str(o.customer_id),
+            "status": o.status if isinstance(o.status, str) else o.status.value,
+            "total_paisas": o.total_paisas,
+            "subtotal_paisas": o.subtotal_paisas,
+            "discount_paisas": o.discount_paisas,
+            "delivery_charges_paisas": o.delivery_charges_paisas,
+            "payment_status": o.payment_status if isinstance(o.payment_status, str) else o.payment_status.value,
+            "payment_method": o.payment_method if isinstance(o.payment_method, str) else (o.payment_method.value if o.payment_method else None),
+            "source": o.source if isinstance(o.source, str) else o.source.value,
+            "notes": o.notes,
+            "created_at": o.created_at.isoformat(),
+            "updated_at": o.updated_at.isoformat(),
+        }
+        for o in orders
+    ]
+    return AdminResponse(
+        success=True,
+        message=f"{len(items)} orders.",
+        data=items,
+    )
+
+
+@router.get(
+    "/dashboard/orders/{order_id}/detail",
+    response_model=AdminResponse,
+    summary="Get order detail with items",
+    dependencies=[Depends(verify_admin_key)],
+)
+async def get_order_detail(order_id: str, distributor_id: str) -> AdminResponse:
+    """Fetch full order detail including line items."""
+    try:
+        order, items = await order_repo.get_order_with_items(
+            order_id, distributor_id
+        )
+    except Exception:
+        raise HTTPException(status_code=404, detail="Order not found.")
+
+    return AdminResponse(
+        success=True,
+        message="Order detail.",
+        data={
+            "order": {
+                "id": str(order.id),
+                "order_number": order.order_number,
+                "customer_id": str(order.customer_id),
+                "status": order.status if isinstance(order.status, str) else order.status.value,
+                "total_paisas": order.total_paisas,
+                "subtotal_paisas": order.subtotal_paisas,
+                "discount_paisas": order.discount_paisas,
+                "delivery_charges_paisas": order.delivery_charges_paisas,
+                "payment_status": order.payment_status if isinstance(order.payment_status, str) else order.payment_status.value,
+                "delivery_address": order.delivery_address,
+                "notes": order.notes,
+                "internal_notes": order.internal_notes,
+                "source": order.source if isinstance(order.source, str) else order.source.value,
+                "created_at": order.created_at.isoformat(),
+                "updated_at": order.updated_at.isoformat(),
+            },
+            "items": [
+                {
+                    "id": str(item.id),
+                    "medicine_name": item.medicine_name,
+                    "quantity_ordered": item.quantity_ordered,
+                    "quantity_fulfilled": item.quantity_fulfilled,
+                    "price_per_unit_paisas": item.price_per_unit_paisas,
+                    "line_total_paisas": item.line_total_paisas,
+                    "discount_paisas": item.discount_paisas,
+                    "unit": item.unit,
+                    "is_out_of_stock_order": item.is_out_of_stock_order,
+                    "is_unlisted_item": item.is_unlisted_item,
+                }
+                for item in items
+            ],
+        },
+    )
+
+
+@router.get(
+    "/dashboard/distributors/{distributor_id}/payments",
+    response_model=AdminResponse,
+    summary="List payments for a distributor",
+    dependencies=[Depends(verify_admin_key)],
+)
+async def list_distributor_payments(
+    distributor_id: str, status_filter: Optional[str] = None
+) -> AdminResponse:
+    """Fetch payments for a distributor, optionally filtered by status."""
+    payments = await payment_repo.get_distributor_payments(
+        distributor_id, status=status_filter
+    )
+    items = [
+        {
+            "id": str(p.id),
+            "transaction_reference": p.transaction_reference,
+            "order_id": str(p.order_id) if p.order_id else None,
+            "gateway": p.gateway if isinstance(p.gateway, str) else p.gateway.value,
+            "amount_paisas": p.amount_paisas,
+            "status": p.status if isinstance(p.status, str) else p.status.value,
+            "payment_link": p.payment_link,
+            "paid_at": p.paid_at.isoformat() if p.paid_at else None,
+            "failure_reason": p.failure_reason,
+            "created_at": p.created_at.isoformat(),
+        }
+        for p in payments
+    ]
+    return AdminResponse(
+        success=True,
+        message=f"{len(items)} payments.",
+        data=items,
+    )
+
+
+@router.get(
+    "/dashboard/distributors/{distributor_id}/sessions",
+    response_model=AdminResponse,
+    summary="List active sessions for a distributor",
+    dependencies=[Depends(verify_admin_key)],
+)
+async def list_distributor_sessions(distributor_id: str) -> AdminResponse:
+    """Fetch active sessions for a distributor.
+
+    Note: sessions are per-number within a distributor, fetched via
+    the repository's list method if available. Falls back to a
+    general query.
+    """
+    from app.db.client import get_db_client
+
+    try:
+        client = get_db_client()
+        result = await (
+            client.table("sessions")
+            .select("*")
+            .eq("distributor_id", distributor_id)
+            .order("last_message_at", desc=True)
+            .limit(50)
+            .execute()
+        )
+        sessions_data = result.data or []
+    except Exception:
+        sessions_data = []
+
+    items = [
+        {
+            "id": s.get("id"),
+            "whatsapp_number": s.get("whatsapp_number"),
+            "customer_id": s.get("customer_id"),
+            "channel": s.get("channel"),
+            "current_state": s.get("current_state"),
+            "language": s.get("language"),
+            "handoff_mode": s.get("handoff_mode"),
+            "last_message_at": s.get("last_message_at"),
+            "expires_at": s.get("expires_at"),
+        }
+        for s in sessions_data
+    ]
+    return AdminResponse(
+        success=True,
+        message=f"{len(items)} sessions.",
+        data=items,
+    )
+
+
+@router.get(
+    "/dashboard/distributors/{distributor_id}/analytics",
+    response_model=AdminResponse,
+    summary="Analytics events for a distributor",
+    dependencies=[Depends(verify_admin_key)],
+)
+async def distributor_analytics(
+    distributor_id: str, event_type: Optional[str] = None
+) -> AdminResponse:
+    """Fetch recent analytics events for a distributor."""
+    events = await analytics_repo.get_distributor_events(
+        distributor_id, event_type=event_type, limit=100
+    )
+    items = [
+        {
+            "id": str(e.id),
+            "event_type": e.event_type,
+            "event_data": e.event_data,
+            "created_at": e.created_at.isoformat(),
+        }
+        for e in events
+    ]
+    return AdminResponse(
+        success=True,
+        message=f"{len(items)} events.",
+        data=items,
     )

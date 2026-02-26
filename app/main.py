@@ -165,6 +165,10 @@ def _register_routers(application: FastAPI) -> None:
     router list in one place.  As new phases add routers, they are
     appended to this function.
     """
+    import pathlib
+
+    from fastapi.staticfiles import StaticFiles
+
     from app.api.health import router as health_router
     from app.api.webhook import router as webhook_router
 
@@ -178,6 +182,15 @@ def _register_routers(application: FastAPI) -> None:
     from app.api.admin import router as admin_router
 
     application.include_router(admin_router)
+
+    # ── Dashboard static files ──────────────────────────────────────
+    dashboard_dir = pathlib.Path(__file__).resolve().parent.parent / "dashboard"
+    if dashboard_dir.is_dir():
+        application.mount(
+            "/dashboard",
+            StaticFiles(directory=str(dashboard_dir), html=True),
+            name="dashboard",
+        )
 
 
 # ── Exception Handlers ──────────────────────────────────────────────
