@@ -63,7 +63,7 @@ _HANDOFF_KEYWORDS: frozenset[str] = frozenset({
 
 _GOODBYE_KEYWORDS: frozenset[str] = frozenset({
     "bye", "goodbye", "allah hafiz", "khuda hafiz", "alvida",
-    "band karo", "khatam", "done",
+    "khatam",
 })
 
 

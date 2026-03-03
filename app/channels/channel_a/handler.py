@@ -536,8 +536,8 @@ async def _handle_main_menu(
                 )
                 if customer and customer.name:
                     name = customer.name
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug("channel_a.customer_lookup_failed", error=str(exc))
         msgs = [build_text_message(
             to,
             prompts["welcome_back"].format(name=name),
@@ -559,17 +559,12 @@ async def _handle_main_menu(
             )
         return [build_text_message(to, prompts["goodbye"])]
 
-    # Intent unclear — if text looks like a medicine name, start order
-    if len(text.strip()) >= 3 and intent in {"unclear", "view_order"}:
-        return await _start_flow_from_menu(
-            session, text,
-            SessionStateA.ORDER_ITEM_COLLECTION,
-            session_repo=session_repo,
-            customer_repo=customer_repo,
-        )
-
-    # Default: re-show menu
-    return await _show_main_menu(to, prompts, language)
+    # Intent unclear — show the unknown message and re-display menu
+    # instead of auto-routing to order flow (which would confuse customers
+    # with gibberish or off-topic messages triggering order mode).
+    msgs = [build_text_message(to, prompts["unknown"])]
+    msgs.extend(await _show_main_menu(to, prompts, language))
+    return msgs
 
 
 # ═══════════════════════════════════════════════════════════════════

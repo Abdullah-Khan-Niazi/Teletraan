@@ -295,19 +295,17 @@ class TestCustomerAnalytics:
     @pytest.mark.asyncio
     async def test_compute_customer_metrics_new_and_returning(self) -> None:
         """New customer has 0 prior orders, returning has 1+."""
-        # First customer: no prior orders → new
-        # Second customer: 1 prior order → returning
-        responses = [
-            MagicMock(data=[], count=0),  # c1 → new
-            MagicMock(data=[{"id": "x"}], count=1),  # c2 → returning
-        ]
+        # Batched query returns rows for customers with prior orders
+        # c2 has prior orders → returning; c1 has none → new
         mock_client = MagicMock()
         mock_client.table.return_value = mock_client
         mock_client.select.return_value = mock_client
         mock_client.eq.return_value = mock_client
+        mock_client.in_.return_value = mock_client
         mock_client.lt.return_value = mock_client
-        mock_client.limit.return_value = mock_client
-        mock_client.execute = AsyncMock(side_effect=responses)
+        mock_client.execute = AsyncMock(
+            return_value=MagicMock(data=[{"customer_id": "c2"}])
+        )
 
         with patch("app.analytics.customer_analytics.get_db_client", return_value=mock_client):
             from app.analytics.customer_analytics import compute_customer_metrics

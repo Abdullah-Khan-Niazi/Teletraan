@@ -257,6 +257,7 @@ class ProspectStatus(StrEnum):
     DEMO_BOOKED = "demo_booked"
     PROPOSAL_SENT = "proposal_sent"
     PAYMENT_PENDING = "payment_pending"
+    PAYMENT_VERIFICATION = "payment_verification"
     CONVERTED = "converted"
     LOST = "lost"
     WAITLISTED = "waitlisted"

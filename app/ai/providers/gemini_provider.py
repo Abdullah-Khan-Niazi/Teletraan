@@ -8,6 +8,7 @@ sends raw bytes directly without routing to Whisper.
 
 from __future__ import annotations
 
+import asyncio
 import time
 
 from loguru import logger
@@ -86,7 +87,8 @@ class GeminiProvider(AIProvider):
             )
 
             start = time.monotonic()
-            response = model.generate_content(
+            response = await asyncio.to_thread(
+                model.generate_content,
                 contents=contents,
                 generation_config=generation_config,
             )
@@ -175,7 +177,8 @@ class GeminiProvider(AIProvider):
             audio_part = {"mime_type": mime_type, "data": audio_bytes}
 
             start = time.monotonic()
-            response = model.generate_content(
+            response = await asyncio.to_thread(
+                model.generate_content,
                 contents=[prompt, audio_part],
                 generation_config=genai.types.GenerationConfig(temperature=0.1),
             )
@@ -259,7 +262,8 @@ class GeminiProvider(AIProvider):
 
             genai.configure(api_key=self._api_key)
             model = genai.GenerativeModel(model_name=self._text_model)
-            response = model.generate_content(
+            response = await asyncio.to_thread(
+                model.generate_content,
                 contents="Reply with OK",
                 generation_config=genai.types.GenerationConfig(
                     temperature=0.0,

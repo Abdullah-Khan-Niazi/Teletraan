@@ -49,3 +49,5 @@ temp/
 # Generated files
 reports/
 exports/
+
+*.md

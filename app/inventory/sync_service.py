@@ -340,7 +340,8 @@ class InventorySyncService:
         """Download a file from URL with Google Drive support.
 
         Converts Google Drive shareable links to direct download URLs.
-        Enforces a 10 MB size limit.
+        Enforces a 10 MB size limit using Content-Length header pre-check
+        and streaming byte count to prevent memory exhaustion.
 
         Args:
             url: HTTP(S) URL to download.
@@ -353,27 +354,44 @@ class InventorySyncService:
                 returns a non-2xx status.
         """
         download_url = self._convert_gdrive_url(url)
+        max_mb = _MAX_FILE_SIZE_BYTES // (1024 * 1024)
 
         try:
             async with httpx.AsyncClient(
                 timeout=_DOWNLOAD_TIMEOUT,
                 follow_redirects=True,
             ) as client:
-                response = await client.get(download_url)
-                response.raise_for_status()
+                async with client.stream("GET", download_url) as response:
+                    response.raise_for_status()
 
-                if len(response.content) > _MAX_FILE_SIZE_BYTES:
-                    raise ValidationError(
-                        f"File exceeds maximum size of {_MAX_FILE_SIZE_BYTES // (1024 * 1024)} MB",
-                        operation="download_file",
-                    )
+                    # Pre-check Content-Length header if available
+                    content_length = response.headers.get("content-length")
+                    if content_length and int(content_length) > _MAX_FILE_SIZE_BYTES:
+                        raise ValidationError(
+                            f"File exceeds maximum size of {max_mb} MB "
+                            f"(Content-Length: {content_length})",
+                            operation="download_file",
+                        )
 
+                    # Stream with running byte count
+                    chunks: list[bytes] = []
+                    total = 0
+                    async for chunk in response.aiter_bytes(chunk_size=65536):
+                        total += len(chunk)
+                        if total > _MAX_FILE_SIZE_BYTES:
+                            raise ValidationError(
+                                f"File exceeds maximum size of {max_mb} MB",
+                                operation="download_file",
+                            )
+                        chunks.append(chunk)
+
+                content = b"".join(chunks)
                 logger.info(
                     "inventory.file_downloaded",
                     url_suffix=url[-30:],
-                    size_bytes=len(response.content),
+                    size_bytes=len(content),
                 )
-                return response.content
+                return content
 
         except httpx.HTTPStatusError as exc:
             raise ValidationError(
@@ -700,7 +718,7 @@ class InventorySyncService:
         )
 
         # Invalidate catalog cache so subsequent reads see fresh data
-        self._catalog_svc.invalidate_cache(distributor_id)
+        await self._catalog_svc.invalidate_cache(distributor_id)
 
         logger.info(
             "inventory.sync_completed",
@@ -950,8 +968,8 @@ class InventorySyncService:
             name = path.rsplit("/", 1)[-1]
             if name and "." in name:
                 return name
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("sync.filename_extract_failed", error=str(exc))
         return "unknown_file"
 
     # ── Type Coercion Helpers ───────────────────────────────────────

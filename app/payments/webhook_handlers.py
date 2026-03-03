@@ -22,6 +22,7 @@ from uuid import UUID
 from loguru import logger
 
 from app.core.constants import ActorType, GatewayPaymentStatus
+from app.core.exceptions import PaymentSignatureError
 from app.db.models.audit import AuditLogCreate
 from app.db.models.payment import PaymentUpdate
 from app.db.repositories import audit_repo, payment_repo
@@ -84,13 +85,10 @@ async def handle_gateway_callback(
             },
         )
 
-        # Return a failure result — caller decides HTTP status code
-        return PaymentCallbackResult(
-            is_successful=False,
-            amount_paisas=0,
-            gateway_transaction_id="",
-            failure_reason="Webhook signature verification failed",
-            raw_payload=parsed_payload,
+        raise PaymentSignatureError(
+            f"Webhook signature verification failed for {gateway_name}",
+            operation="verify_webhook_signature",
+            details={"gateway": gateway_name},
         )
 
     # ── Step 2: Process the callback through the gateway ────────────

@@ -50,33 +50,30 @@ async def compute_customer_metrics(
     client = get_db_client()
     start_ts = datetime.combine(target_date, datetime.min.time(), tzinfo=timezone.utc)
 
-    new_count = 0
-    returning_count = 0
+    # Single batched query: find all customers who have prior orders
+    returning_ids: set[str] = set()
+    try:
+        result = (
+            await client.table("orders")
+            .select("customer_id")
+            .eq("distributor_id", distributor_id)
+            .in_("customer_id", customer_ids)
+            .lt("created_at", start_ts.isoformat())
+            .execute()
+        )
+        for row in result.data:
+            returning_ids.add(row["customer_id"])
+    except Exception as exc:
+        logger.warning(
+            "analytics.customer_batch_check_failed",
+            distributor_id=distributor_id,
+            error=str(exc),
+        )
+        # Conservative fallback: count all as returning
+        returning_ids = set(customer_ids)
 
-    for cid in customer_ids:
-        try:
-            result = (
-                await client.table("orders")
-                .select("id", count="exact")
-                .eq("distributor_id", distributor_id)
-                .eq("customer_id", cid)
-                .lt("created_at", start_ts.isoformat())
-                .limit(1)
-                .execute()
-            )
-            prior_orders = result.count if result.count is not None else len(result.data)
-            if prior_orders == 0:
-                new_count += 1
-            else:
-                returning_count += 1
-        except Exception as exc:
-            logger.warning(
-                "analytics.customer_check_failed",
-                customer_id=cid,
-                error=str(exc),
-            )
-            # Count as returning to be conservative
-            returning_count += 1
+    returning_count = len(returning_ids)
+    new_count = len(customer_ids) - returning_count
 
     logger.info(
         "analytics.customers_computed",

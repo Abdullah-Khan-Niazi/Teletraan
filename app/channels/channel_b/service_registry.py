@@ -9,11 +9,12 @@ Usage::
     from app.channels.channel_b.service_registry import service_registry
 
     services = await service_registry.get_services()
-    handler  = service_registry.get_handler(service)
+    handler  = await service_registry.get_handler(service)
 """
 
 from __future__ import annotations
 
+import asyncio
 import importlib
 import time
 from typing import Any, Callable, Optional
@@ -30,6 +31,7 @@ _DEFAULT_CACHE_TTL_SECONDS: int = 300
 # Registry of handler functions keyed by ``sales_flow_handler`` slug.
 # Filled lazily on first lookup.
 _HANDLER_REGISTRY: dict[str, Callable[..., Any]] = {}
+_HANDLER_LOCK = asyncio.Lock()
 
 # Maps handler slug → Python dotted path for lazy import
 _HANDLER_PATHS: dict[str, str] = {
@@ -82,7 +84,7 @@ class ServiceRegistry:
             return entry
         return await self._repo.get_by_slug(slug)
 
-    def get_handler(self, service: ServiceRegistryEntry) -> Optional[Callable[..., Any]]:
+    async def get_handler(self, service: ServiceRegistryEntry) -> Optional[Callable[..., Any]]:
         """Resolve a Python handler function for the given service.
 
         Returns ``None`` if no handler is configured or not found.
@@ -99,7 +101,7 @@ class ServiceRegistry:
         if handler_slug in _HANDLER_REGISTRY:
             return _HANDLER_REGISTRY[handler_slug]
 
-        # Lazy-load from _HANDLER_PATHS
+        # Lazy-load from _HANDLER_PATHS (with lock to prevent race)
         dotted_path = _HANDLER_PATHS.get(handler_slug)
         if not dotted_path:
             logger.error(
@@ -109,7 +111,11 @@ class ServiceRegistry:
             )
             return None
 
-        return self._import_handler(handler_slug, dotted_path)
+        async with _HANDLER_LOCK:
+            # Double-check after acquiring lock
+            if handler_slug in _HANDLER_REGISTRY:
+                return _HANDLER_REGISTRY[handler_slug]
+            return self._import_handler(handler_slug, dotted_path)
 
     def register_handler(self, slug: str, handler: Callable[..., Any]) -> None:
         """Manually register a handler function (useful for tests)."""

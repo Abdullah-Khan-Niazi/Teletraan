@@ -126,21 +126,26 @@ class StockService:
         """
         items = await catalog_repo.get_active_catalog(distributor_id)
 
-        set_in_stock = 0
-        set_out_of_stock = 0
+        ids_to_set_in_stock: list[str] = []
+        ids_to_set_out_of_stock: list[str] = []
 
         for item in items:
             should_be_in_stock = item.stock_quantity > 0
             if item.is_in_stock != should_be_in_stock:
-                await catalog_repo.update_stock(
-                    str(item.id),
-                    distributor_id,
-                    item.stock_quantity,
-                )
                 if should_be_in_stock:
-                    set_in_stock += 1
+                    ids_to_set_in_stock.append(str(item.id))
                 else:
-                    set_out_of_stock += 1
+                    ids_to_set_out_of_stock.append(str(item.id))
+
+        if ids_to_set_in_stock or ids_to_set_out_of_stock:
+            await catalog_repo.batch_update_in_stock_flags(
+                distributor_id,
+                items_in_stock=ids_to_set_in_stock,
+                items_out_of_stock=ids_to_set_out_of_stock,
+            )
+
+        set_in_stock = len(ids_to_set_in_stock)
+        set_out_of_stock = len(ids_to_set_out_of_stock)
 
         logger.info(
             "stock.in_stock_flags_refreshed",

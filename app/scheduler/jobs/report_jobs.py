@@ -444,8 +444,8 @@ async def run_churn_detection() -> None:
                     )
                     if cust.data:
                         customer_name = cust.data[0].get("name", "Unknown")
-                except Exception:
-                    pass
+                except Exception as exc:
+                    logger.debug("report.customer_lookup_failed", error=str(exc))
 
                 # Use event_data for days_inactive if available
                 days_inactive = event_data.get("days_inactive", 0)

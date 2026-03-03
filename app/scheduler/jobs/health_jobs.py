@@ -94,13 +94,14 @@ async def _check_gateway_health() -> dict:
         Dict with ``healthy`` bool and per-gateway status.
     """
     try:
-        from app.payments.factory import get_available_gateways
+        from app.payments.factory import get_available_gateways, get_gateway
 
         available = get_available_gateways()
         gateway_status: dict[str, bool] = {}
 
-        for name, gateway in available.items():
+        for name in available:
             try:
+                gateway = get_gateway(name)
                 is_healthy = await gateway.health_check()
                 gateway_status[name] = is_healthy
             except Exception as exc:

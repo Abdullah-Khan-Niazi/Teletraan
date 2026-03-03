@@ -169,7 +169,7 @@ def check_credit_limit(
 
     credit_limit = customer.credit_limit_paisas
     if credit_limit <= 0:
-        return None  # No limit set — unlimited
+        return None  # 0 or unset — no limit
 
     outstanding = customer.outstanding_balance_paisas or 0
     total_after = outstanding + order_total_paisas

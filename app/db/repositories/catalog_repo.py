@@ -365,6 +365,61 @@ class CatalogRepository:
                 operation="update_stock",
             ) from exc
 
+    async def batch_update_in_stock_flags(
+        self,
+        distributor_id: str,
+        items_in_stock: list[str],
+        items_out_of_stock: list[str],
+    ) -> None:
+        """Batch-update ``is_in_stock`` flags for multiple items.
+
+        Issues at most two queries regardless of item count.
+
+        Args:
+            distributor_id: Tenant scope.
+            items_in_stock: Item IDs that should be marked in-stock.
+            items_out_of_stock: Item IDs that should be marked out-of-stock.
+
+        Raises:
+            DatabaseError: On update failure.
+        """
+        client = get_db_client()
+        try:
+            if items_in_stock:
+                await (
+                    client.table(self.TABLE)
+                    .update({"is_in_stock": True})
+                    .eq("distributor_id", distributor_id)
+                    .in_("id", items_in_stock)
+                    .execute()
+                )
+            if items_out_of_stock:
+                await (
+                    client.table(self.TABLE)
+                    .update({"is_in_stock": False})
+                    .eq("distributor_id", distributor_id)
+                    .in_("id", items_out_of_stock)
+                    .execute()
+                )
+            logger.info(
+                "db.batch_in_stock_updated",
+                table=self.TABLE,
+                distributor_id=distributor_id,
+                in_stock_count=len(items_in_stock),
+                out_of_stock_count=len(items_out_of_stock),
+            )
+        except Exception as exc:
+            logger.error(
+                "db.batch_update_failed",
+                table=self.TABLE,
+                operation="batch_update_in_stock_flags",
+                error=str(exc),
+            )
+            raise DatabaseError(
+                f"Failed to batch-update in-stock flags: {exc}",
+                operation="batch_update_in_stock_flags",
+            ) from exc
+
     async def reserve_stock(
         self, id: str, distributor_id: str, quantity: int
     ) -> CatalogItem:

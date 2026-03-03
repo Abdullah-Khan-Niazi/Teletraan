@@ -962,17 +962,17 @@ class TestWebhookHandler:
         mock_payment_repo: MagicMock,
         mock_audit_repo: MagicMock,
     ) -> None:
-        """Failed signature returns failure result."""
+        """Failed signature raises PaymentSignatureError."""
         mock_gw = AsyncMock(spec=PaymentGateway)
         mock_gw.verify_webhook_signature = AsyncMock(return_value=False)
         mock_get_gateway.return_value = mock_gw
         mock_audit_repo.create = AsyncMock()
 
+        from app.core.exceptions import PaymentSignatureError
         from app.payments.webhook_handlers import handle_gateway_callback
 
-        result = await handle_gateway_callback("jazzcash", b"body", {}, {})
-        assert result.is_successful is False
-        assert "signature" in (result.failure_reason or "").lower()
+        with pytest.raises(PaymentSignatureError, match="signature"):
+            await handle_gateway_callback("jazzcash", b"body", {}, {})
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -1043,13 +1043,21 @@ class TestPaymentService:
         assert payment.status == GatewayPaymentStatus.PENDING
 
     @pytest.mark.asyncio
+    @patch("app.payments.service.get_gateway")
     @patch("app.payments.service.payment_repo")
-    async def test_cancel_payment(self, mock_payment_repo: MagicMock) -> None:
+    async def test_cancel_payment(
+        self,
+        mock_payment_repo: MagicMock,
+        mock_get_gateway: MagicMock,
+    ) -> None:
         """Pending payment can be cancelled."""
         mock_payment_repo.get_by_id = AsyncMock(return_value=_make_payment())
         mock_payment_repo.update = AsyncMock(
             return_value=_make_payment(status=GatewayPaymentStatus.CANCELLED)
         )
+        mock_gw = AsyncMock()
+        mock_gw.cancel_payment = AsyncMock(return_value=True)
+        mock_get_gateway.return_value = mock_gw
 
         from app.payments.service import PaymentService
 

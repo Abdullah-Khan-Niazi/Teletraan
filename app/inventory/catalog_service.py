@@ -103,23 +103,27 @@ class CatalogService:
             )
             return catalog
 
-    def invalidate_cache(self, distributor_id: str) -> None:
+    async def invalidate_cache(self, distributor_id: str) -> None:
         """Remove a distributor's catalog from cache.
 
-        Call after any create/update/delete mutation.
+        Acquires the cache lock to prevent race conditions with
+        concurrent ``get_active_catalog`` calls.
 
         Args:
             distributor_id: Tenant scope.
         """
-        _CATALOG_CACHE.pop(distributor_id, None)
+        async with _CACHE_LOCK:
+            _CATALOG_CACHE.pop(distributor_id, None)
         logger.debug("catalog.cache_invalidated", distributor_id=distributor_id)
 
-    def invalidate_all_caches(self) -> None:
+    async def invalidate_all_caches(self) -> None:
         """Clear the entire catalog cache.
 
+        Acquires the cache lock to prevent race conditions.
         Useful after bulk imports or schema changes.
         """
-        _CATALOG_CACHE.clear()
+        async with _CACHE_LOCK:
+            _CATALOG_CACHE.clear()
         logger.info("catalog.cache_cleared")
 
     # ── Fuzzy medicine lookup ─────────────────────────────────────
@@ -320,7 +324,7 @@ class CatalogService:
             The newly created CatalogItem.
         """
         item = await self._repo.create(data)
-        self.invalidate_cache(str(data.distributor_id))
+        await self.invalidate_cache(str(data.distributor_id))
         logger.info(
             "catalog.item_created",
             medicine_name=data.medicine_name,
@@ -348,7 +352,7 @@ class CatalogService:
         item = await self._repo.update(
             item_id, data, distributor_id=distributor_id
         )
-        self.invalidate_cache(distributor_id)
+        await self.invalidate_cache(distributor_id)
         return item
 
     async def delete_item(
@@ -367,7 +371,7 @@ class CatalogService:
             True if deleted.
         """
         result = await self._repo.soft_delete(item_id, distributor_id)
-        self.invalidate_cache(distributor_id)
+        await self.invalidate_cache(distributor_id)
         return result
 
     async def update_stock(
@@ -389,7 +393,7 @@ class CatalogService:
         item = await self._repo.update_stock(
             item_id, distributor_id, quantity
         )
-        self.invalidate_cache(distributor_id)
+        await self.invalidate_cache(distributor_id)
         return item
 
     # ── Statistics ────────────────────────────────────────────────

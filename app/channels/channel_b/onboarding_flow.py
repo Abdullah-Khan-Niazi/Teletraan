@@ -116,7 +116,7 @@ async def handle_onboarding_step(
     pros_repo = prospect_repo or ProspectRepository()
     dist_repo = distributor_repo or DistributorRepository()
     to = session.whatsapp_number
-    state_data = dict(session.state_data)
+    state_data = dict(session.state_data or {})
     onboarding_step = state_data.get("onboarding_step", "start")
 
     if onboarding_step == "start":

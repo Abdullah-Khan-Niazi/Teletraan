@@ -115,7 +115,7 @@ async def compute_top_items(
     try:
         result = (
             await client.table("order_items")
-            .select("catalog_id, medicine_name, quantity, line_total_paisas")
+            .select("order_id, catalog_id, medicine_name, quantity, line_total_paisas")
             .in_("order_id", confirmed_order_ids)
             .execute()
         )
@@ -140,8 +140,7 @@ async def compute_top_items(
             }
         aggregated[name]["units"] += row.get("quantity", 0)
         aggregated[name]["revenue"] += row.get("line_total_paisas", 0)
-        # Use order_id if available; we don't have it directly, so count rows
-        aggregated[name]["orders"].add(row.get("catalog_id", name))
+        aggregated[name]["orders"].add(row.get("order_id", name))
 
     # Sort by revenue descending
     sorted_items = sorted(

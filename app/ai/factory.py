@@ -111,6 +111,18 @@ def get_fallback_provider() -> AIProvider | None:
         return None
 
 
+def clear_provider_cache() -> None:
+    """Clear cached AI provider singletons.
+
+    Call after changing ``ACTIVE_AI_PROVIDER`` or
+    ``AI_FALLBACK_PROVIDER`` at runtime so the next call to
+    ``get_ai_provider()`` / ``get_fallback_provider()`` picks up
+    the new configuration.
+    """
+    get_ai_provider.cache_clear()
+    logger.info("ai.provider_cache_cleared")
+
+
 def get_stt_provider() -> AIProvider:
     """Return the provider to use for speech-to-text.
 
@@ -173,11 +185,12 @@ async def generate_text_with_fallback(
             max_tokens=max_tokens,
             use_premium_model=use_premium_model,
         )
-    except AIProviderError as exc:
+    except Exception as exc:
         logger.warning(
             "ai.primary_provider_failed",
             provider=primary.get_provider_name(),
             error=str(exc),
+            error_type=type(exc).__name__,
         )
 
     fallback = get_fallback_provider()
@@ -197,7 +210,7 @@ async def generate_text_with_fallback(
             max_tokens=max_tokens,
             use_premium_model=use_premium_model,
         )
-    except AIProviderError as exc:
+    except Exception as exc:
         logger.error(
             "ai.fallback_provider_also_failed",
             provider=fallback.get_provider_name(),

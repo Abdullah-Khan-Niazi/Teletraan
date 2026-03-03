@@ -141,6 +141,15 @@ async def download_voice_bytes(media_id: str) -> tuple[bytes, str]:
     """
     audio_bytes, mime_type = await whatsapp_client.download_media(media_id)
 
+    # Enforce 25 MB size limit (matches WhatsApp's own media limit)
+    _MAX_VOICE_SIZE = 25 * 1024 * 1024
+    if len(audio_bytes) > _MAX_VOICE_SIZE:
+        raise WhatsAppAPIError(
+            f"Voice message exceeds {_MAX_VOICE_SIZE // (1024 * 1024)} MB "
+            f"limit ({len(audio_bytes)} bytes)",
+            operation="download_voice",
+        )
+
     logger.info(
         "media.voice_downloaded",
         media_id=media_id,

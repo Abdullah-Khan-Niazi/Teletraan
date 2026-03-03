@@ -236,6 +236,7 @@ import os
 _MAIN_ENV = {
     "META_APP_ID": "test-app-id",
     "META_APP_SECRET": "test-app-secret",
+    "META_ACCESS_TOKEN": "test-access-token",
     "META_VERIFY_TOKEN": "test-verify-token",
     "OWNER_PHONE_NUMBER_ID": "owner-pnid",
     "OWNER_WHATSAPP_NUMBER": "+923001234567",

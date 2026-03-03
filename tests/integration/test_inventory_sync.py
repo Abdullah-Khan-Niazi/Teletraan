@@ -676,13 +676,13 @@ class TestStockService:
 
         with patch("app.inventory.stock_service.catalog_repo") as mock_repo:
             mock_repo.get_active_catalog = AsyncMock(return_value=items)
-            mock_repo.update_stock = AsyncMock(return_value=items[0])
+            mock_repo.batch_update_in_stock_flags = AsyncMock()
 
             in_stock, out_of_stock = await svc.refresh_in_stock_flags(_DIST_ID)
 
         assert in_stock == 1  # One item set to in_stock
         assert out_of_stock == 1  # One item set to out_of_stock
-        assert mock_repo.update_stock.call_count == 2
+        mock_repo.batch_update_in_stock_flags.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_detect_and_alert_low_stock(self) -> None:
@@ -746,7 +746,7 @@ class TestStockService:
             patch("app.inventory.stock_service.whatsapp_notifier") as mock_notifier,
         ):
             mock_repo.get_active_catalog = AsyncMock(return_value=items)
-            mock_repo.update_stock = AsyncMock(return_value=items[0])
+            mock_repo.batch_update_in_stock_flags = AsyncMock()
             mock_repo.get_low_stock_items = AsyncMock(return_value=low_items)
             mock_notifier.notify_owner = AsyncMock(return_value="msg_456")
 

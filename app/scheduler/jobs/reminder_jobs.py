@@ -115,10 +115,32 @@ async def run_send_scheduled_messages() -> None:
                     str(msg.distributor_id) if msg.distributor_id else None
                 )
 
+                # Resolve the phone_number_id for this distributor
+                phone_number_id = ""
+                if distributor_id:
+                    try:
+                        from app.db.repositories.distributor_repo import (
+                            DistributorRepository,
+                        )
+
+                        dist_repo = DistributorRepository()
+                        dist = await dist_repo.get_by_id(distributor_id)
+                        if dist:
+                            phone_number_id = (
+                                dist.whatsapp_phone_number_id or ""
+                            )
+                    except Exception as dist_exc:
+                        logger.warning(
+                            "scheduler.send_scheduled.dist_lookup_failed",
+                            distributor_id=distributor_id,
+                            error=str(dist_exc),
+                        )
+
                 await notifier.send_text(
-                    distributor_id=distributor_id or "",
-                    to_number=msg.recipient_number,
+                    phone_number_id,
+                    to=msg.recipient_number,
                     text=text,
+                    distributor_id=distributor_id or "",
                 )
                 await msg_repo.mark_sent(str(msg.id))
                 sent += 1

@@ -35,7 +35,7 @@ _EDIT_NAME_ID = "profile_edit_name"
 _EDIT_SHOP_ID = "profile_edit_shop"
 _EDIT_ADDR_ID = "profile_edit_address"
 
-_NAME_RE = re.compile(r"^[A-Za-z\s\.'-]{2,255}$")
+_NAME_RE = re.compile(r"^[\w\s.\-']{2,255}$", re.UNICODE)
 
 
 def _get_prompts(language: str) -> dict[str, str]:

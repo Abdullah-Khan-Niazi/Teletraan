@@ -118,7 +118,28 @@ async def handle_channel_b_message(
     """
     _pros_repo = prospect_repo or ProspectRepository()
     to = session.whatsapp_number
-    state = SessionStateB(session.current_state) if session.current_state != "idle" else SessionStateB.IDLE
+
+    # Safely resolve the session state — fall back to IDLE if the DB
+    # contains a value not present in the enum (migration, corruption).
+    try:
+        state = (
+            SessionStateB(session.current_state)
+            if session.current_state != "idle"
+            else SessionStateB.IDLE
+        )
+    except ValueError:
+        logger.warning(
+            "channel_b.unknown_state_value",
+            raw_state=session.current_state,
+            session_id=str(session.id),
+        )
+        state = SessionStateB.IDLE
+        await session_repo.update_state(
+            str(session.id),
+            SessionStateB.IDLE,
+            previous_state=session.current_state,
+        )
+
     interactive_id = button_id or list_id
 
     logger.info(
@@ -131,6 +152,21 @@ async def handle_channel_b_message(
     )
 
     # ── 1. Owner commands (pipeline management) ─────────────────
+    # Defense-in-depth: verify owner's WhatsApp number independently
+    if is_owner and text.strip():
+        try:
+            from app.core.config import get_settings
+            owner_number = get_settings().owner_whatsapp_number
+            if owner_number and to != owner_number:
+                logger.warning(
+                    "channel_b.owner_mismatch",
+                    expected_suffix=owner_number[-4:] if owner_number else "N/A",
+                    actual_suffix=to[-4:] if len(to) >= 4 else to,
+                )
+                is_owner = False
+        except Exception:
+            pass  # Settings unavailable — rely on caller's is_owner flag
+
     if is_owner and text.strip():
         cmd_result = await _handle_owner_command(text.strip(), to, _pros_repo)
         if cmd_result is not None:

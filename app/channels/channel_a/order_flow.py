@@ -986,6 +986,33 @@ async def _handle_final_confirmation(
             context, str(session.id), session_repo,
         )
 
+        # Persist order to database
+        order_id_display = str(context.session_order_id)[:8].upper()
+        try:
+            from app.orders.order_service import OrderService
+
+            order_svc = OrderService()
+            order, _items = await order_svc.create_order_from_context(
+                context,
+                distributor_id=distributor_id,
+                customer_id=str(session.customer_id),
+            )
+            order_id_display = order.order_number or order_id_display
+            logger.info(
+                "order_flow.order_persisted",
+                order_id=str(order.id),
+                order_number=order.order_number,
+                session_id=str(session.id),
+            )
+        except Exception as exc:
+            logger.error(
+                "order_flow.order_persist_failed",
+                session_id=str(session.id),
+                error=str(exc),
+            )
+            # Order is confirmed in context but DB write failed —
+            # still notify customer and log for manual reconciliation.
+
         # Transition to main menu
         tr = transition(
             session.current_state,
@@ -998,7 +1025,6 @@ async def _handle_final_confirmation(
         )
 
         total_rs = context.pricing_snapshot.total_paisas / 100
-        order_id = str(context.session_order_id)[:8].upper()
 
         logger.info(
             "order_flow.order_confirmed",
@@ -1010,7 +1036,7 @@ async def _handle_final_confirmation(
         return [build_text_message(
             to,
             prompts["order_confirmed"].format(
-                order_id=order_id,
+                order_id=order_id_display,
                 total=f"{total_rs:,.0f}",
             ),
         )]

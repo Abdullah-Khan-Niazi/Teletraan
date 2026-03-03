@@ -255,6 +255,7 @@ async def handle_inquiry_step(
     if len(text_lower) >= 3:
         result = await _try_catalog_lookup(
             text_lower, prompts, to,
+            distributor_id=str(session.distributor_id),
             catalog_service=catalog_service,
         )
         if result:
@@ -525,6 +526,7 @@ async def _try_catalog_lookup(
     prompts: dict[str, str],
     to: str,
     *,
+    distributor_id: str = "",
     catalog_service: CatalogService | None,
 ) -> list[dict] | None:
     """Try to match text as a medicine name.
@@ -533,6 +535,7 @@ async def _try_catalog_lookup(
         text: Lowered user text.
         prompts: Prompt dict.
         to: WhatsApp recipient.
+        distributor_id: Distributor UUID for catalog scope.
         catalog_service: Optional catalog service override.
 
     Returns:
@@ -542,7 +545,7 @@ async def _try_catalog_lookup(
     try:
         from app.inventory.fuzzy_matcher import fuzzy_match_medicine
 
-        result = await cat.find_medicine("", text)
+        result = await cat.find_medicine(distributor_id, text)
         if result and result.matches and result.matches[0].score >= 70.0:
             top = result.matches[0]
             item = top.catalog_item

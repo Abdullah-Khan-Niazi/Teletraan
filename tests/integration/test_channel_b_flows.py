@@ -551,7 +551,7 @@ class TestSalesFlow:
 
     @pytest.mark.asyncio
     async def test_payment_confirmed(self) -> None:
-        """'Paid' → ONBOARDING_SETUP."""
+        """'Paid' → PAYMENT_VERIFICATION (verification pending)."""
         session = _make_session(
             state=SessionStateB.PAYMENT_PENDING.value,
             state_data={
@@ -569,14 +569,12 @@ class TestSalesFlow:
             prospect_repo=pros_repo,
         )
 
-        assert any("payment" in m.get("text", {}).get("body", "").lower() for m in msgs)
-        call_args = sess_repo.update_state.call_args
-        assert call_args[0][1] == SessionStateB.ONBOARDING_SETUP
+        assert any("verify" in m.get("text", {}).get("body", "").lower() for m in msgs)
 
-        # Prospect marked CONVERTED
+        # Prospect marked PAYMENT_VERIFICATION
         pros_repo.update.assert_called()
         update_data = pros_repo.update.call_args[0][1]
-        assert update_data.status == ProspectStatus.CONVERTED
+        assert update_data.status == ProspectStatus.PAYMENT_VERIFICATION
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -877,7 +875,8 @@ class TestServiceRegistry:
         assert "PKR 15,000/mo" in result
         assert "setup" not in result
 
-    def test_handler_resolution(self) -> None:
+    @pytest.mark.asyncio
+    async def test_handler_resolution(self) -> None:
         """Handler resolves by slug."""
         from app.channels.channel_b.service_registry import ServiceRegistry
 
@@ -888,17 +887,18 @@ class TestServiceRegistry:
 
         reg.register_handler("test_handler", _dummy_handler)
         service = _make_service(sales_flow_handler="test_handler")
-        handler = reg.get_handler(service)
+        handler = await reg.get_handler(service)
 
         assert handler is _dummy_handler
 
-    def test_handler_none_when_no_slug(self) -> None:
+    @pytest.mark.asyncio
+    async def test_handler_none_when_no_slug(self) -> None:
         """No handler when no slug configured."""
         from app.channels.channel_b.service_registry import ServiceRegistry
 
         reg = ServiceRegistry.__new__(ServiceRegistry)
         service = _make_service(sales_flow_handler=None)
-        handler = reg.get_handler(service)
+        handler = await reg.get_handler(service)
 
         assert handler is None
 
@@ -1032,12 +1032,16 @@ class TestEndToEndSalesFunnel:
         )
         assert current_state == SessionStateB.PAYMENT_PENDING
 
-        # Step 9: Paid → ONBOARDING_SETUP
+        # Step 9: Paid → stays PAYMENT_PENDING (verification pending)
         msgs = await handle_sales_step(
             make_session(), "paid",
             session_repo=sess_repo, prospect_repo=pros_repo,
         )
-        assert current_state == SessionStateB.ONBOARDING_SETUP
+        assert current_state == SessionStateB.PAYMENT_PENDING
+        assert any("verify" in m.get("text", {}).get("body", "").lower() for m in msgs)
+
+        # Simulate owner verification → advance to ONBOARDING_SETUP
+        current_state = SessionStateB.ONBOARDING_SETUP.value
 
         # Step 10: Onboarding start → creates distributor
         from app.channels.channel_b.onboarding_flow import handle_onboarding_step

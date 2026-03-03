@@ -379,16 +379,18 @@ class WhatsAppNotifier:
         Never raises — logging failures are captured and logged to stderr.
         """
         try:
-            now = datetime.now(timezone.utc).isoformat()
+            # Mask phone number for storage — show only last 4 digits
+            masked_number = f"****{recipient_number[-4:]}" if recipient_number else None
+
             log_data = NotificationLogCreate(
                 distributor_id=distributor_id or "",
-                recipient_number=recipient_number,
+                recipient_number_masked=masked_number,
                 recipient_type=recipient_type,
                 notification_type=notification_type,
-                content_preview=content_preview,
+                message_preview=content_preview,
                 whatsapp_message_id=whatsapp_message_id,
                 delivery_status=delivery_status,
-                delivery_status_updated_at=now,
+                error_message=error_message,
             )
             await notification_repo.create(log_data)
         except Exception as exc:

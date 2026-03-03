@@ -401,7 +401,7 @@ async def _handle_name_step(
         return [build_text_message(to, prompts["invalid_name"])]
 
     # Save name in state_data and transition to shop step
-    state_data = dict(session.state_data)
+    state_data = dict(session.state_data or {})
     state_data["name"] = name
 
     t_result = transition(
@@ -447,7 +447,7 @@ async def _handle_shop_step(
         logger.debug("onboarding.invalid_shop", input=text[:20])
         return [build_text_message(to, prompts["invalid_shop"])]
 
-    state_data = dict(session.state_data)
+    state_data = dict(session.state_data or {})
     state_data["shop_name"] = shop_name
 
     t_result = transition(
@@ -496,7 +496,7 @@ async def _handle_address_step(
 
     city = _extract_city(address)
 
-    state_data = dict(session.state_data)
+    state_data = dict(session.state_data or {})
     state_data["address"] = address
     if city:
         state_data["city"] = city

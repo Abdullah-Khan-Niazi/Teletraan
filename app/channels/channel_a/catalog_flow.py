@@ -169,11 +169,12 @@ async def handle_catalog_step(
             session.current_state,
             SessionStateA.MAIN_MENU.value,
         )
-        await session_repo.update_state(
-            str(session.id),
-            SessionStateA.MAIN_MENU.value,
-            previous_state=session.current_state,
-        )
+        if tr.allowed:
+            await session_repo.update_state(
+                str(session.id),
+                SessionStateA.MAIN_MENU.value,
+                previous_state=session.current_state,
+            )
         return []  # Main handler will show menu
 
     # Start ordering

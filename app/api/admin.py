@@ -609,8 +609,8 @@ async def dashboard_overview() -> AdminResponse:
         try:
             customers = await customer_repo.get_active_customers(did, limit=1000)
             total_customers += len(customers)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("admin.customer_count_failed", distributor_id=did, error=str(exc))
         try:
             recent = await order_repo.get_recent_orders(did, hours=24)
             total_orders += len(recent)
@@ -628,8 +628,8 @@ async def dashboard_overview() -> AdminResponse:
                     "payment_status": o.payment_status if isinstance(o.payment_status, str) else o.payment_status.value,
                     "created_at": o.created_at.isoformat(),
                 })
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("admin.order_fetch_failed", distributor_id=did, error=str(exc))
 
     recent_orders_list.sort(key=lambda x: x["created_at"], reverse=True)
 

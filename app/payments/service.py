@@ -215,7 +215,7 @@ class PaymentService:
             )
             return False
 
-        cancelled = False
+        cancelled = True
         if payment.gateway_transaction_id:
             try:
                 gateway = get_gateway(payment.gateway.value)
@@ -225,10 +225,20 @@ class PaymentService:
             except Exception as exc:
                 logger.warning(
                     "payment.service.gateway_cancel_failed",
+                    payment_id=payment_id,
                     error=str(exc),
                 )
+                cancelled = False
 
-        # Always mark as cancelled in our DB
+        if not cancelled:
+            logger.warning(
+                "payment.service.cancel_skipped_db",
+                payment_id=payment_id,
+                reason="gateway cancellation failed or rejected",
+            )
+            return False
+
+        # Only mark cancelled in DB after gateway confirms cancellation
         await payment_repo.update(
             str(payment.id),
             PaymentUpdate(status=GatewayPaymentStatus.CANCELLED),

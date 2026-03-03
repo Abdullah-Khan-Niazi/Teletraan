@@ -24,6 +24,7 @@ from app.core.constants import (
     Language,
     SessionStateA,
 )
+from app.core.security import sanitize_for_prompt
 from app.db.models.complaint import ComplaintCreate
 from app.db.models.session import Session
 from app.db.repositories.complaint_repo import ComplaintRepository
@@ -287,7 +288,7 @@ async def _handle_description(
         )]
 
     state_data = dict(session.state_data or {})
-    state_data["complaint_description"] = text.strip()[:2000]
+    state_data["complaint_description"] = sanitize_for_prompt(text.strip())
 
     tr = transition(
         session.current_state,

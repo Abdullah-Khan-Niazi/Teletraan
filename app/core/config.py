@@ -61,6 +61,9 @@ class Settings(BaseSettings):
     meta_verify_token: str = Field(
         ..., description="Webhook verification token (you define this)."
     )
+    meta_access_token: str = Field(
+        ..., description="Meta permanent access token for WhatsApp Cloud API."
+    )
     meta_api_version: str = Field(default="v19.0")
     meta_api_base_url: str = Field(default="https://graph.facebook.com")
     owner_phone_number_id: str = Field(

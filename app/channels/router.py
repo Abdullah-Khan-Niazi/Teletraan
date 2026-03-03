@@ -109,7 +109,7 @@ async def resolve_and_route(message: ParsedMessage) -> RoutingResult | None:
         )
         return RoutingResult(
             distributor=distributor,
-            channel=ChannelType.CHANNEL_B,
+            channel=ChannelType.B,
             parsed_message=message,
         )
 
@@ -134,7 +134,7 @@ async def resolve_and_route(message: ParsedMessage) -> RoutingResult | None:
     )
     return RoutingResult(
         distributor=distributor,
-        channel=ChannelType.CHANNEL_A,
+        channel=ChannelType.A,
         parsed_message=message,
     )
 

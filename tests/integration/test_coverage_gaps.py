@@ -473,17 +473,19 @@ class TestCatalogService:
         await service.get_active_catalog(dist_id, force_refresh=True)
         assert mock_repo.get_active_catalog.await_count == 2
 
-    def test_invalidate_cache(self) -> None:
+    @pytest.mark.asyncio
+    async def test_invalidate_cache(self) -> None:
         from app.inventory.catalog_service import CatalogService
 
         service = CatalogService()
-        service.invalidate_cache(str(uuid4()))
+        await service.invalidate_cache(str(uuid4()))
 
-    def test_invalidate_all_caches(self) -> None:
+    @pytest.mark.asyncio
+    async def test_invalidate_all_caches(self) -> None:
         from app.inventory.catalog_service import CatalogService
 
         service = CatalogService()
-        service.invalidate_all_caches()
+        await service.invalidate_all_caches()
 
     @pytest.mark.asyncio
     async def test_get_categories(self) -> None:

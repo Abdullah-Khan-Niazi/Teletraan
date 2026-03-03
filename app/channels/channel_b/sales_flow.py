@@ -206,7 +206,7 @@ async def _handle_greeting(
 
     if normalized in positive or any(kw in normalized for kw in positive):
         # Create or fetch prospect
-        state_data = dict(session.state_data)
+        state_data = dict(session.state_data or {})
         prospect = await pros_repo.get_by_whatsapp_number(to)
         if not prospect:
             prospect = await pros_repo.create(
@@ -249,7 +249,7 @@ async def _handle_qualification_name(
     if len(name) < 2:
         return [build_text_message(to, "Apna poora naam dein.")]
 
-    state_data = dict(session.state_data)
+    state_data = dict(session.state_data or {})
     state_data.setdefault("qualification", {})
     state_data["qualification"]["name"] = name
 
@@ -283,7 +283,7 @@ async def _handle_qualification_business(
     if len(business_name) < 2:
         return [build_text_message(to, "Business ka naam batayein.")]
 
-    state_data = dict(session.state_data)
+    state_data = dict(session.state_data or {})
     state_data.setdefault("qualification", {})
     state_data["qualification"]["business_name"] = business_name
 
@@ -318,7 +318,7 @@ async def _handle_qualification_city(
     if len(city) < 2:
         return [build_text_message(to, "City ka naam batayein.")]
 
-    state_data = dict(session.state_data)
+    state_data = dict(session.state_data or {})
     state_data.setdefault("qualification", {})
     state_data["qualification"]["city"] = city
 
@@ -353,7 +353,7 @@ async def _handle_qualification_retailer_count(
         return [build_text_message(to, _INVALID_NUMBER)]
 
     retailer_count = int(digits)
-    state_data = dict(session.state_data)
+    state_data = dict(session.state_data or {})
     qual = state_data.setdefault("qualification", {})
     qual["retailer_count"] = retailer_count
 
@@ -435,7 +435,7 @@ async def _handle_service_detail(
 ) -> list[dict]:
     """SERVICE_DETAIL — respond to interest / demo / not-interested."""
     choice = button_id or text.strip().lower()
-    state_data = dict(session.state_data)
+    state_data = dict(session.state_data or {})
 
     if choice in {"sales_interested", "interested", "yes", "haan", "ji"}:
         # Skip demo → straight to proposal
@@ -491,7 +491,7 @@ async def _handle_demo_booking(
 ) -> list[dict]:
     """DEMO_BOOKING — book slot or skip to proposal."""
     normalized = text.strip().lower()
-    state_data = dict(session.state_data)
+    state_data = dict(session.state_data or {})
 
     if normalized in {"skip", "nahi", "proposal", "confirm"}:
         # Skip demo — straight to proposal
@@ -535,7 +535,7 @@ async def _handle_proposal_response(
 ) -> list[dict]:
     """PROPOSAL_SENT — proceed to payment or negotiate."""
     choice = button_id or text.strip().lower()
-    state_data = dict(session.state_data)
+    state_data = dict(session.state_data or {})
 
     if choice in {"sales_accept", "accept", "ok", "haan", "yes", "pay"}:
         # Generate payment link and move to PAYMENT_PENDING
@@ -583,11 +583,12 @@ async def _handle_payment_pending(
 ) -> list[dict]:
     """PAYMENT_PENDING — confirm payment or resend link."""
     choice = button_id or text.strip().lower()
-    state_data = dict(session.state_data)
+    state_data = dict(session.state_data or {})
 
     paid_keywords = {"paid", "done", "ho gaya", "payment kar diya", "sent", "bhej diya"}
     if choice in {"sales_paid", *paid_keywords} or any(kw in choice for kw in paid_keywords):
-        # Mark payment confirmed — move to ONBOARDING_SETUP
+        # Do NOT auto-confirm — mark as PAYMENT_VERIFICATION_PENDING
+        # and require owner/webhook confirmation before activating.
         prospect_id = state_data.get("prospect_id")
         qual = state_data.get("qualification", {})
 
@@ -595,21 +596,24 @@ async def _handle_payment_pending(
             await pros_repo.update(
                 prospect_id,
                 ProspectUpdate(
-                    status=ProspectStatus.CONVERTED,
-                    converted_at=datetime.now(tz=timezone.utc),
+                    status=ProspectStatus.PAYMENT_VERIFICATION,
                 ),
             )
 
-        transition(SessionStateB.PAYMENT_PENDING, SessionStateB.ONBOARDING_SETUP)
+        state_data["payment_self_reported"] = True
+        state_data["payment_self_reported_at"] = (
+            datetime.now(tz=timezone.utc).isoformat()
+        )
+
         await sess_repo.update_state(
             str(session.id),
-            SessionStateB.ONBOARDING_SETUP,
+            session.current_state,
             previous_state=session.current_state,
             state_data=state_data,
         )
 
         logger.info(
-            "sales.payment_confirmed",
+            "sales.payment_self_reported",
             session_id=str(session.id),
             prospect_id=prospect_id,
             whatsapp=to[-4:],
@@ -617,7 +621,9 @@ async def _handle_payment_pending(
 
         return [build_text_message(
             to,
-            _PAYMENT_CONFIRMED.format(name=qual.get("name", ""))
+            "Shukriya! Hum aapki payment verify kar rahe hain. \u23f3\n"
+            "Verification complete hone par aapko update mil jayega.\n\n"
+            "Agar koi issue ho toh 'talk to human' likhen.",
         )]
 
     elif choice in {"sales_resend", "link", "resend"}:

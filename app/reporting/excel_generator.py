@@ -96,6 +96,51 @@ def _ensure_reports_dir() -> Path:
     return _REPORTS_DIR
 
 
+def cleanup_old_reports(max_age_days: int = 90) -> int:
+    """Remove report files older than ``max_age_days``.
+
+    Prevents unbounded disk usage from accumulated Excel files.
+    Intended to be called periodically by the scheduler.
+
+    Args:
+        max_age_days: Delete files older than this many days.
+
+    Returns:
+        Number of files deleted.
+    """
+    if not _REPORTS_DIR.exists():
+        return 0
+
+    import time
+
+    cutoff = time.time() - (max_age_days * 86400)
+    deleted = 0
+
+    for filepath in _REPORTS_DIR.glob("*.xlsx"):
+        try:
+            if filepath.stat().st_mtime < cutoff:
+                filepath.unlink()
+                deleted += 1
+                logger.debug(
+                    "excel.old_report_deleted",
+                    path=str(filepath),
+                )
+        except OSError as exc:
+            logger.warning(
+                "excel.cleanup_failed",
+                path=str(filepath),
+                error=str(exc),
+            )
+
+    if deleted:
+        logger.info(
+            "excel.cleanup_complete",
+            deleted_count=deleted,
+            max_age_days=max_age_days,
+        )
+    return deleted
+
+
 def _get_excel_path(distributor_id: str, year: int, month: int) -> Path:
     """Get the path of the Excel file for a distributor+month.
 

@@ -513,22 +513,24 @@ class TestServiceRegistry:
         result = await reg.get_default_service()
         assert result is None
 
-    def test_get_handler_no_slug(self) -> None:
+    @pytest.mark.asyncio
+    async def test_get_handler_no_slug(self) -> None:
         """Handler is None when service has no sales_flow_handler."""
         from app.channels.channel_b.service_registry import ServiceRegistry
 
         entry = self._make_entry(sales_flow_handler=None)
         reg = ServiceRegistry.__new__(ServiceRegistry)
-        result = reg.get_handler(entry)
+        result = await reg.get_handler(entry)
         assert result is None
 
-    def test_get_handler_unknown_slug(self) -> None:
+    @pytest.mark.asyncio
+    async def test_get_handler_unknown_slug(self) -> None:
         """Handler is None for slug not in _HANDLER_PATHS."""
         from app.channels.channel_b.service_registry import ServiceRegistry
 
         entry = self._make_entry(sales_flow_handler="unknown_handler")
         reg = ServiceRegistry.__new__(ServiceRegistry)
-        result = reg.get_handler(entry)
+        result = await reg.get_handler(entry)
         assert result is None
 
     def test_register_handler(self) -> None:
