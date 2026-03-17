@@ -4,7 +4,6 @@
   <img src="https://img.shields.io/badge/FastAPI-async-000000?style=for-the-badge&logo=fastapi&logoColor=white&labelColor=171717" alt="fastapi"/>
   <img src="https://img.shields.io/badge/Supabase-PostgreSQL-000000?style=for-the-badge&logo=supabase&logoColor=white&labelColor=171717" alt="supabase"/>
   <img src="https://img.shields.io/badge/WhatsApp-Cloud%20API-000000?style=for-the-badge&logo=whatsapp&logoColor=white&labelColor=171717" alt="whatsapp"/>
-  <img src="https://img.shields.io/badge/Primus%20Family-17%20Systems-000000?style=for-the-badge&labelColor=171717" alt="primus"/>
   <img src="https://img.shields.io/badge/AI%20Coded-Claude%20Opus%204.6-000000?style=for-the-badge&labelColor=171717" alt="ai-coded"/>
 </p>
 
@@ -13,84 +12,35 @@
 <h1 align="center">⬡&ensp;T E L E T R A A N</h1>
 
 <p align="center">
-  <strong>"More than meets the eye."</strong>
+  <strong>"Multi-Tenant B2B AI Agent"</strong>
 </p>
 
-<p align="center">
-  <em>
-    The coordination layer of <strong>Project Primus</strong> — currently deployed as an autonomous<br/>
-    WhatsApp order & operations system for medicine distributors in Pakistan.<br/>
-    Not a chatbot. An intelligence. The central computer.
-  </em>
-</p>
-
-<br/>
-
 ---
 
 <br/>
 
-## The Name & The Universe
+## Table of Contents
 
-### Teletraan-1 in Transformers Lore
+- [Brief Overview](#brief-overview)
+- [Scalability Architecture](#scalability-architecture)
+- [What TELETRAAN Does Today](#what-teletraan-does-today)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [By the Numbers](#by-the-numbers)
+- [Admin Dashboard](#admin-dashboard)
+- [Quickstart](#quickstart)
+- [Documentation](#documentation)
+- [How It Was Built](#how-it-was-built)
+- [Acknowledgments](#acknowledgments)
 
-In the Transformers universe, **Teletraan-1** is the Autobots' central computer aboard the Ark — a fully sentient system that monitors all environments, processes threats, manages resources, coordinates Autobot operations, repairs allies, and maintains the mission. It is not a tool. It is the intelligence that makes the mission possible. Without Teletraan-1, the Autobots are blind.
+## Brief Overview
 
-**TELETRAAN** (this project) is named with that same intent.
-
-It does not just receive WhatsApp messages. It understands voice in Urdu, Roman Urdu, and English through multi-provider AI; it fuzzy-matches medicine names that are misspelled or abbreviated; it computes live billing with distributor-specific discounts; it orchestrates payments across six gateways; it tracks inventory, generates reports, manages distributor subscriptions, sends scheduled alerts, and coordinates all of this for multiple distributors simultaneously — 24/7, fully autonomously.
-
-Like Teletraan-1, it is **the system that holds everything together**.
-
----
-
-### The Primus Universe
-
-**Primus** is the name of the overarching platform — a family of 17 specialized automation and intelligence systems, each named after a Transformer of significance. Together, these systems will form a complete business operating infrastructure.
-
-TELETRAAN is the **coordination layer of Primus** — the system that, in the future, will connect, orchestrate, and relay data between all other Primus systems, just as Teletraan-1 coordinated all Autobot operations.
-
-<br/>
-
-<table>
-<thead>
-<tr>
-<th align="center">System</th>
-<th align="center">Domain</th>
-<th align="center">Status</th>
-</tr>
-</thead>
-<tbody>
-<tr><td align="center"><strong>Alchemist</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Amalgamous</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Elita</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Liege Maximo</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Megatronus</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Micronus</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Nexus</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Onyx</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Optimus</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Orion</strong></td><td>ERP system — inventory, procurement, operations</td><td align="center"><code>✓ In Production</code></td></tr>
-<tr><td align="center"><strong>Prima</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Quintus</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Sentinel</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Solus</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Teletraan</strong></td><td>WhatsApp automation, order management & coordination hub</td><td align="center"><code>✓ In Production</code></td></tr>
-<tr><td align="center"><strong>Vector</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
-<tr><td align="center"><strong>Zeta</strong></td><td>TBD</td><td align="center"><code>Planned</code></td></tr>
-</tbody>
-</table>
-
-<br/>
-
-Two Primus systems are currently in production:
-
-- **Orion** — A full ERP system handling inventory management, procurement workflows, stock control, and distributor-side operations.
-- **Teletraan** (this repository) — The WhatsApp automation layer that connects to Orion for live inventory data and operates the order chatbot, payments, reporting, subscriptions, and the sales funnel channel autonomously.
-
-The remaining 15 systems are on the Primus roadmap. As each is built, **TELETRAAN will expand its coordination role** — receiving events from Nexus, surfacing data for Optimus, enforcing policies from Liege Maximo, triggering reports in Zeta, delegating delivery tasks to Vector.
-
----
+TELETRAAN is a multi-tenant, production-grade WhatsApp automation platform for
+medicine distributors in Pakistan. It combines async FastAPI services,
+Supabase-backed data models, AI-driven conversation handling, and payment
+orchestration to manage retailer order flows (Channel A) and software sales
+flows (Channel B) from a single scalable system.
 
 ## Scalability Architecture
 
@@ -500,7 +450,7 @@ teletraan/
 ║   API endpoints ·········· 30+      ─────────────────    ║
 ║   Background jobs ········ 14       Phases · 13          ║
 ║   Env variables ·········· 62       Commits · 20+        ║
-║   Skill/instruction files  21       Primus systems · 17  ║
+║   Skill/instruction files  21                            ║
 ║                                                          ║
 ╚══════════════════════════════════════════════════════════╝
 ```
@@ -667,8 +617,7 @@ This is not a demo. It is a production-grade system built to the same standard a
 ## Acknowledgments
 
 **Designed and directed by [Abdullah-Khan-Niazi](https://github.com/Abdullah-Khan-Niazi)**
-— architect of Project Primus, product owner, and the vision behind TELETRAAN.
-The system exists because he knew exactly what it needed to do.
+— Sole architect and product owner of TELETRAAN.
 
 **Coded entirely by Claude Opus 4.6** (Anthropic) via GitHub Copilot Pro
 — from first commit to v1.0.0, one of the most complete AI-built production systems to date.
@@ -679,21 +628,8 @@ The system exists because he knew exactly what it needed to do.
 
 <br/>
 
-## Primus Integration
-
-When the next Primus systems come online, TELETRAAN will expand its role.
-
-TELETRAAN's architecture was already designed for these connections. Adding each integration requires implementing a new client module and configuring new environment variables — no changes to existing business logic.
-
-<br/>
-
----
-
-<br/>
-
 <p align="center">
-  <strong>⬡ TELETRAAN — Project Primus</strong><br/>
-  <em>"Till all are served."</em>
+  <strong>⬡ TELETRAAN</strong><br/>
 </p>
 
 <br/>
@@ -701,5 +637,5 @@ TELETRAAN's architecture was already designed for these connections. Adding each
 ---
 
 <p align="center">
-  <sub>Proprietary — All rights reserved. Part of Project Primus by Abdullah-Khan-Niazi.</sub>
+  <sub>Proprietary — All rights reserved.</sub>
 </p>

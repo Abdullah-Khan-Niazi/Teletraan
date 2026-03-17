@@ -68,16 +68,19 @@ GEMINI_API_KEY=AIza...
 ### Generate Required Keys
 
 **Fernet encryption key:**
+
 ```bash
 python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
 **Random secret key:**
+
 ```bash
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
 **Admin API key (use any strong string, 16+ chars):**
+
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
@@ -91,12 +94,15 @@ The `ADMIN_API_KEY` is the password that protects the admin dashboard and all ad
 ### Setting Your Admin API Key
 
 1. Generate a strong key:
+
    ```bash
    python -c "import secrets; print(secrets.token_urlsafe(32))"
    ```
+
    Example output: `4K9mXqLpRsNvBw7dAeJhCfYtUzGi8oQ2WkDl6sT1Xy0`
 
 2. Add to `.env`:
+
    ```env
    ADMIN_API_KEY=4K9mXqLpRsNvBw7dAeJhCfYtUzGi8oQ2WkDl6sT1Xy0
    ```
@@ -193,12 +199,12 @@ The admin dashboard is a built-in web UI served directly by TELETRAAN. No separa
 
 ### Accessing the Dashboard
 
-| Environment | URL |
-|:---|:---|
-| Local development | `http://localhost:8000/dashboard` |
-| Render deployment | `https://your-app.onrender.com/dashboard` |
-| Railway deployment | `https://your-app.railway.app/dashboard` |
-| Custom domain | `https://your-domain.com/dashboard` |
+| Environment        | URL                                       |
+| :----------------- | :---------------------------------------- |
+| Local development  | `http://localhost:8000/dashboard`         |
+| Render deployment  | `https://your-app.onrender.com/dashboard` |
+| Railway deployment | `https://your-app.railway.app/dashboard`  |
+| Custom domain      | `https://your-domain.com/dashboard`       |
 
 ### Login
 
@@ -208,16 +214,16 @@ The key is stored in `localStorage` for the browser session. Click **Logout** in
 
 ### Dashboard Pages
 
-| Page | Path (sidebar) | Description |
-|:---|:---|:---|
-| Overview | `#overview` | Platform KPIs, active distributors, revenue, feature flags |
+| Page         | Path (sidebar)  | Description                                                       |
+| :----------- | :-------------- | :---------------------------------------------------------------- |
+| Overview     | `#overview`     | Platform KPIs, active distributors, revenue, feature flags        |
 | Distributors | `#distributors` | Full distributor management: create, suspend, extend subscription |
-| Orders | `#orders` | Order history with status and time-window filters |
-| Customers | `#customers` | Customer registry, spend tracking, block/unblock |
-| Payments | `#payments` | Transaction records by gateway and status |
-| Sessions | `#sessions` | Active WhatsApp conversation sessions |
-| Analytics | `#analytics` | Event log with type filtering and JSON inspection |
-| System | `#system` | Health checks, force inventory sync, broadcast announcements |
+| Orders       | `#orders`       | Order history with status and time-window filters                 |
+| Customers    | `#customers`    | Customer registry, spend tracking, block/unblock                  |
+| Payments     | `#payments`     | Transaction records by gateway and status                         |
+| Sessions     | `#sessions`     | Active WhatsApp conversation sessions                             |
+| Analytics    | `#analytics`    | Event log with type filtering and JSON inspection                 |
+| System       | `#system`       | Health checks, force inventory sync, broadcast announcements      |
 
 ### Distributor Management (Dashboard)
 
@@ -339,21 +345,25 @@ curl -H "X-Admin-Key: YOUR_ADMIN_KEY" https://your-app.onrender.com/api/admin/st
 ## Railway Deployment
 
 1. Install Railway CLI:
+
    ```bash
    npm install -g @railway/cli
    ```
 
 2. Login:
+
    ```bash
    railway login
    ```
 
 3. Initialize project:
+
    ```bash
    railway init
    ```
 
 4. Set environment variables:
+
    ```bash
    railway variables set APP_SECRET_KEY=xxx
    railway variables set ENCRYPTION_KEY=xxx
@@ -372,6 +382,7 @@ curl -H "X-Admin-Key: YOUR_ADMIN_KEY" https://your-app.onrender.com/api/admin/st
    ```
 
 The `Procfile` defines the start command:
+
 ```
 web: uvicorn app.main:app --host 0.0.0.0 --port $PORT
 ```
@@ -435,6 +446,7 @@ curl https://your-domain.com/health
 ```
 
 Returns:
+
 ```json
 {
   "status": "healthy",
@@ -448,6 +460,7 @@ Returns:
 ### Dashboard System Page
 
 The System page in the dashboard is a live monitoring view:
+
 - Database connection status
 - AI provider health (live test call)
 - Payment gateway reachability
@@ -460,31 +473,31 @@ TELETRAAN logs structured JSON events via Loguru. On Render/Railway, all logs st
 
 Key log events to watch:
 
-| Event | Level | Meaning |
-|:---|:---|:---|
-| `webhook.received` | INFO | Incoming WhatsApp message |
-| `session.created` | INFO | New customer session started |
-| `order.confirmed` | INFO | Order successfully placed |
-| `payment.received` | INFO | Payment webhook confirmed |
+| Event                  | Level   | Meaning                                  |
+| :--------------------- | :------ | :--------------------------------------- |
+| `webhook.received`     | INFO    | Incoming WhatsApp message                |
+| `session.created`      | INFO    | New customer session started             |
+| `order.confirmed`      | INFO    | Order successfully placed                |
+| `payment.received`     | INFO    | Payment webhook confirmed                |
 | `ai_provider.fallback` | WARNING | Primary AI failed, switched to secondary |
-| `signature.invalid` | WARNING | Webhook HMAC check failed |
-| `db.error` | ERROR | Database operation failed |
-| `scheduler.job_failed` | ERROR | Background job failed |
+| `signature.invalid`    | WARNING | Webhook HMAC check failed                |
+| `db.error`             | ERROR   | Database operation failed                |
+| `scheduler.job_failed` | ERROR   | Background job failed                    |
 
 ### Background Jobs (14 total)
 
-| Job | Frequency | Purpose |
-|:---|:---|:---|
-| Health check | Every 5 min | Verify DB + AI connectivity |
-| Session cleanup | Every 6 hours | Remove stale sessions |
-| Inventory sync | Every 2 hours | Pull catalog updates |
-| Subscription check | Daily 9:00 AM | Check expiring subscriptions |
-| Subscription reminders | Daily 9:00 AM | Send 7/3/1-day WhatsApp alerts |
-| Daily report | Daily midnight | XLSX order summary per distributor |
-| Weekly report | Monday 8:00 AM | Weekly performance digest |
-| Monthly report | 1st of month | Monthly analytics compilation |
-| Payment expiry check | Every 30 min | Mark expired pending payments |
-| Prospect follow-up | Every 2 hours | Channel B nurturing sequences |
+| Job                    | Frequency      | Purpose                            |
+| :--------------------- | :------------- | :--------------------------------- |
+| Health check           | Every 5 min    | Verify DB + AI connectivity        |
+| Session cleanup        | Every 6 hours  | Remove stale sessions              |
+| Inventory sync         | Every 2 hours  | Pull catalog updates               |
+| Subscription check     | Daily 9:00 AM  | Check expiring subscriptions       |
+| Subscription reminders | Daily 9:00 AM  | Send 7/3/1-day WhatsApp alerts     |
+| Daily report           | Daily midnight | XLSX order summary per distributor |
+| Weekly report          | Monday 8:00 AM | Weekly performance digest          |
+| Monthly report         | 1st of month   | Monthly analytics compilation      |
+| Payment expiry check   | Every 30 min   | Mark expired pending payments      |
+| Prospect follow-up     | Every 2 hours  | Channel B nurturing sequences      |
 
 ---
 
@@ -493,20 +506,21 @@ Key log events to watch:
 ### Current Capacity
 
 A single TELETRAAN instance handles:
+
 - Unlimited distributors (data is fully tenant-scoped)
 - ~200 concurrent active WhatsApp sessions (in-memory rate limiter ceiling)
 - ~50 requests/second (Uvicorn async event loop)
 
 ### Scaling Paths
 
-| Bottleneck | Solution | Complexity |
-|:---|:---|:---|
-| Concurrent sessions > 200 | Move rate limiter to Redis | Low — swap in-memory dict for Redis client |
-| Request volume | Add Gunicorn workers: `gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app` | Trivial |
-| Multiple instances | All state is in Supabase (no in-process state except rate limiter) | Low after Redis migration |
-| DB query volume | Add read replica, materialized views for analytics aggregates | Medium |
-| Background jobs at scale | Migrate to Celery + Redis broker | Medium |
-| Primus connections | Add Nexus event publisher alongside analytics_repo.log_event() | Low per integration |
+| Bottleneck                | Solution                                                                            | Complexity                                 |
+| :------------------------ | :---------------------------------------------------------------------------------- | :----------------------------------------- |
+| Concurrent sessions > 200 | Move rate limiter to Redis                                                          | Low — swap in-memory dict for Redis client |
+| Request volume            | Add Gunicorn workers: `gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app` | Trivial                                    |
+| Multiple instances        | All state is in Supabase (no in-process state except rate limiter)                  | Low after Redis migration                  |
+| DB query volume           | Add read replica, materialized views for analytics aggregates                       | Medium                                     |
+| Background jobs at scale  | Migrate to Celery + Redis broker                                                    | Medium                                     |
+| Primus connections        | Add Nexus event publisher alongside analytics_repo.log_event()                      | Low per integration                        |
 
 ### Recommended Upgrade Path
 
@@ -522,17 +536,17 @@ Phase 5 (Primus integration)        → Nexus event bus publisher, Orion live AP
 
 ## Troubleshooting
 
-| Issue | Likely Cause | Fix |
-|:---|:---|:---|
-| App won't start | Missing required env var | Check startup logs for which var failed Pydantic validation |
-| `ENCRYPTION_KEY invalid` | Not a valid Fernet key | Regenerate: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"` |
-| Dashboard shows 401 | Wrong ADMIN_API_KEY | Check the exact value in your `.env` — no trailing spaces |
-| Dashboard shows 403 | Key format issue | Ensure the key is at least 16 characters |
-| Webhook not receiving | Verify token mismatch | `META_VERIFY_TOKEN` in `.env` must match exactly what is in Meta dashboard |
-| Webhook 400 on messages | HMAC signature fail | Ensure `META_APP_SECRET` is the App Secret (not App ID) |
-| DB connection fails | Wrong Supabase keys | Use `service_role` key, not `anon` key |
-| AI responses empty | Provider API key invalid | Test key directly: `curl` the provider API |
-| Scheduler not running | Startup error | Look for `scheduler.start_failed` in logs |
-| Voice messages ignored | `ENABLE_VOICE_PROCESSING=false` | Set to `true` and set `OPENAI_API_KEY` |
-| Payment webhooks failing | Gateway signature config | Check gateway-specific webhook secret in `.env` |
-| Inventory sync failing | No catalog source configured | Set `INVENTORY_SYNC_SOURCE` and credentials in `.env` |
+| Issue                    | Likely Cause                    | Fix                                                                                                     |
+| :----------------------- | :------------------------------ | :------------------------------------------------------------------------------------------------------ |
+| App won't start          | Missing required env var        | Check startup logs for which var failed Pydantic validation                                             |
+| `ENCRYPTION_KEY invalid` | Not a valid Fernet key          | Regenerate: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"` |
+| Dashboard shows 401      | Wrong ADMIN_API_KEY             | Check the exact value in your `.env` — no trailing spaces                                               |
+| Dashboard shows 403      | Key format issue                | Ensure the key is at least 16 characters                                                                |
+| Webhook not receiving    | Verify token mismatch           | `META_VERIFY_TOKEN` in `.env` must match exactly what is in Meta dashboard                              |
+| Webhook 400 on messages  | HMAC signature fail             | Ensure `META_APP_SECRET` is the App Secret (not App ID)                                                 |
+| DB connection fails      | Wrong Supabase keys             | Use `service_role` key, not `anon` key                                                                  |
+| AI responses empty       | Provider API key invalid        | Test key directly: `curl` the provider API                                                              |
+| Scheduler not running    | Startup error                   | Look for `scheduler.start_failed` in logs                                                               |
+| Voice messages ignored   | `ENABLE_VOICE_PROCESSING=false` | Set to `true` and set `OPENAI_API_KEY`                                                                  |
+| Payment webhooks failing | Gateway signature config        | Check gateway-specific webhook secret in `.env`                                                         |
+| Inventory sync failing   | No catalog source configured    | Set `INVENTORY_SYNC_SOURCE` and credentials in `.env`                                                   |
